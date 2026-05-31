@@ -1,4 +1,4 @@
-# Repeat Hello World Repo
+# Maze Solver
 
-- Simple repo that utilizes the Hello World library via CMake's fetchcontent
-- Serves as an example of a project that has a dependency on another project
+- Libraries w/ maze solving algorithms for micromouse mazes
+- Dependent on mouse driver layer
