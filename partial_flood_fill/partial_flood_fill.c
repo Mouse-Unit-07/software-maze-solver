@@ -1,16 +1,14 @@
 /*-------------------------------- FILE INFO ---------------------------------*/
-/* Filename           : repeat_hello_world.c                                  */
+/* Filename           : partial_flood_fill.c                                  */
 /*                                                                            */
-/* Implementation w/ a function to print Hello World twice                    */
+/* Implementation for partial flood fill maze solving algorithm               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------*/
 /*                               Include Files                                */
 /*----------------------------------------------------------------------------*/
-#include <stdio.h>
-#include "print_hello_world.h"
-#include "repeat_hello_world.h"
+#include "partial_flood_fill.h"
 
 /*----------------------------------------------------------------------------*/
 /*                         Private Function Prototypes                        */
@@ -25,11 +23,6 @@
 /*----------------------------------------------------------------------------*/
 /*                         Public Function Definitions                        */
 /*----------------------------------------------------------------------------*/
-void print_hello_world_twice(void)
-{
-    print_hello_world();
-    print_hello_world();
-}
 
 /*----------------------------------------------------------------------------*/
 /*                        Private Function Definitions                        */

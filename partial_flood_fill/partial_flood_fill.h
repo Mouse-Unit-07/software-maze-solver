@@ -1,11 +1,11 @@
 /*-------------------------------- FILE INFO ---------------------------------*/
-/* Filename           : repeat_hello_world.h                                  */
+/* Filename           : partial_flood_fill.h                                  */
 /*                                                                            */
-/* Interface w/ a function to repeat Hello World                              */
+/* Interface for partial flood fill maze solving algorithm                    */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-#ifndef REPEAT_HELLO_WORLD_H_
-#define REPEAT_HELLO_WORLD_H_
+#ifndef PARTIAL_FLOOD_FILL_H_
+#define PARTIAL_FLOOD_FILL_H_
 
 /*----------------------------------------------------------------------------*/
 /*                             Public Definitions                             */
@@ -15,6 +15,5 @@
 /*----------------------------------------------------------------------------*/
 /*                         Public Function Prototypes                         */
 /*----------------------------------------------------------------------------*/
-void print_hello_world_twice(void);
 
-#endif /* REPEAT_HELLO_WORLD_H_ */
+#endif /* PARTIAL_FLOOD_FILL_H_ */
