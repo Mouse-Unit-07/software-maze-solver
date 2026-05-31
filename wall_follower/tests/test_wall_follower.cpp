@@ -1,15 +1,18 @@
 /*================================ FILE INFO =================================*/
-/* Filename           : test_repeat_hello_world.cpp                           */
+/* Filename           : test_wall_follower.cpp                                */
 /*                                                                            */
-/* Test implementation for repeat_hello_world.c                               */
+/* Test implementation for wall_follower.c                                    */
 /*                                                                            */
 /*============================================================================*/
 
 /*============================================================================*/
 /*                               Include Files                                */
 /*============================================================================*/
-extern "C" {
-#include "repeat_hello_world.h"
+extern "C"
+{
+
+#include "wall_follower.h"
+
 }
 
 #include <CppUTest/TestHarness.h>
@@ -23,15 +26,15 @@ extern "C" {
 /*============================================================================*/
 /*                            Mock Implementations                            */
 /*============================================================================*/
-extern "C" void print_hello_world(void)
+extern "C"
 {
-    mock().actualCall("print_hello_world");
+
 }
 
 /*============================================================================*/
 /*                                 Test Group                                 */
 /*============================================================================*/
-TEST_GROUP(RepeatHelloWorldTests)
+TEST_GROUP(WallFollowerTests)
 {
     void setup() override
     {
@@ -48,8 +51,7 @@ TEST_GROUP(RepeatHelloWorldTests)
 /*============================================================================*/
 /*                                    Tests                                   */
 /*============================================================================*/
-TEST(RepeatHelloWorldTests, CallsPrintTwice)
+TEST(WallFollowerTests, DeleteMe)
 {
-    mock().expectNCalls(2, "print_hello_world");
-    print_hello_world_twice();
+
 }
