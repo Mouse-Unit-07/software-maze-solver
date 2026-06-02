@@ -15,5 +15,9 @@
 /*----------------------------------------------------------------------------*/
 /*                         Public Function Prototypes                         */
 /*----------------------------------------------------------------------------*/
+void run_partial_flood_fill(bool enable_print);
+
+/* helpers exposed for testing */
+enum movement determine_partial_flood_fill_move(void);
 
 #endif /* PARTIAL_FLOOD_FILL_H_ */
