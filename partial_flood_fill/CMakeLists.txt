@@ -12,6 +12,7 @@ target_include_directories(partial_flood_fill_lib PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}
 )
 
-target_link_libraries(partial_flood_fill_lib PRIVATE
+target_link_libraries(partial_flood_fill_lib PUBLIC
+    maze_solver_common_lib
     mouse_driver_lib
 )
