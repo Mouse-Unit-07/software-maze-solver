@@ -34,6 +34,12 @@ enum direction
     DIRECTION_WEST
 };
 
+enum
+{
+    MAX_DIMENSION_CELL_COUNT = 16,
+    MAX_PATH_LENGTH = MAX_DIMENSION_CELL_COUNT * MAX_DIMENSION_CELL_COUNT
+};
+
 /*----------------------------------------------------------------------------*/
 /* helper structs exposed for testing */
 enum map_cell_flags
@@ -63,12 +69,6 @@ struct mouse {
     enum direction direction;
 };
 
-enum
-{
-    MAX_DIMENSION_CELL_COUNT = 16,
-    MAX_PATH_LENGTH = MAX_DIMENSION_CELL_COUNT * MAX_DIMENSION_CELL_COUNT
-};
-
 struct maze_solver_path {
     uint16_t length;
     struct coordinates cells[MAX_PATH_LENGTH];
@@ -84,10 +84,21 @@ void set_maze_solver_config(struct maze_solver_config cfg);
 struct maze_solver_config get_maze_solver_config(void);
 
 void reset_maze_solver_state(void);
+uint32_t get_maze_size(void);
 void set_goal_found(bool found);
+bool is_goal_cell(struct coordinates coord);
 bool is_mouse_at_goal(void);
 void update_current_cell_walls(void);
+struct coordinates get_current_coordinates(void);
+enum direction get_current_direction(void);
 
+enum direction get_left_direction(enum direction dir);
+enum direction get_right_direction(enum direction dir);
+enum direction get_opposite_direction(enum direction dir);
+enum movement get_turn_required(enum direction from, enum direction to);
+
+bool is_wall_known_at_coordinate(struct coordinates coord, enum direction dir);
+bool is_wall_present_at_coordinate(struct coordinates coord, enum direction dir);
 bool is_front_wall_known_in_map(void);
 bool is_front_wall_present_in_map(void);
 bool is_left_wall_known_in_map(void);

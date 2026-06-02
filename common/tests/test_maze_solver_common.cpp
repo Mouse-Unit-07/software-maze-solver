@@ -270,6 +270,20 @@ TEST(MazeSolverCommonTests, ResetMazeSolverStateInitializesMazeBoundaryWalls)
 
     CHECK((north_east.flags & CELL_EAST_WALL_KNOWN) != 0u);
     CHECK((north_east.flags & CELL_EAST_WALL_PRESENT) != 0u);
+
+    CHECK(is_wall_known_at_coordinate({1u,0u}, DIRECTION_SOUTH));
+    CHECK(is_wall_present_at_coordinate({1u,0u}, DIRECTION_SOUTH));
+}
+
+TEST(MazeSolverCommonTests, GetMazeSizeReturnsConfiguredSize)
+{
+    struct maze_solver_config cfg{create_default_maze_solver_config()};
+
+    cfg.maze_size = 8u;
+
+    set_maze_solver_config(cfg);
+
+    CHECK(get_maze_size() == 8u);
 }
 
 TEST(MazeSolverCommonTests, GoalFoundCanBeSet)
@@ -282,6 +296,35 @@ TEST(MazeSolverCommonTests, GoalFoundCanBeSet)
 
     set_goal_found(false);
     CHECK_FALSE(get_goal_found());
+}
+
+TEST(MazeSolverCommonTests, IsGoalCellReturnsTrueForCenterOfOddMaze)
+{
+    struct maze_solver_config cfg{create_default_maze_solver_config()};
+
+    cfg.maze_size = 5u;
+
+    set_maze_solver_config(cfg);
+
+    CHECK(is_goal_cell({2u, 2u}));
+
+    CHECK_FALSE(is_goal_cell({1u, 2u}));
+}
+
+TEST(MazeSolverCommonTests, IsGoalCellReturnsTrueForFourCenterCellsOfEvenMaze)
+{
+    struct maze_solver_config cfg{create_default_maze_solver_config()};
+
+    cfg.maze_size = 4u;
+
+    set_maze_solver_config(cfg);
+
+    CHECK(is_goal_cell({1u,1u}));
+    CHECK(is_goal_cell({1u,2u}));
+    CHECK(is_goal_cell({2u,1u}));
+    CHECK(is_goal_cell({2u,2u}));
+
+    CHECK_FALSE(is_goal_cell({0u,0u}));
 }
 
 TEST(MazeSolverCommonTests, IsMouseAtGoalReturnsFalseAtStartForOddMaze)
@@ -314,6 +357,80 @@ TEST(MazeSolverCommonTests, IsMouseAtGoalReturnsTrueAtStartForTwoByTwoMaze)
     reset_maze_solver_state();
 
     CHECK(is_mouse_at_goal());
+}
+
+TEST(MazeSolverCommonTests, GetCurrentCoordinatesAndDirectionReturnMouseState)
+{
+    initialize_4_by_4_maze();
+
+    mock().expectOneCall("rotate_clockwise_90_deg");
+    mock().expectOneCall("move_forward");
+
+    execute_move(MOVE_RIGHT);
+
+    struct coordinates coord{get_current_coordinates()};
+
+    CHECK(coord.x == 1u);
+    CHECK(coord.y == 0u);
+
+    CHECK(get_current_direction() == DIRECTION_EAST);
+}
+
+TEST(MazeSolverCommonTests, GetLeftDirectionReturnsExpectedDirection)
+{
+    CHECK(get_left_direction(DIRECTION_NORTH) == DIRECTION_WEST);
+    CHECK(get_left_direction(DIRECTION_EAST) == DIRECTION_NORTH);
+    CHECK(get_left_direction(DIRECTION_SOUTH) == DIRECTION_EAST);
+    CHECK(get_left_direction(DIRECTION_WEST) == DIRECTION_SOUTH);
+}
+
+TEST(MazeSolverCommonTests, GetRightDirectionReturnsExpectedDirection)
+{
+    CHECK(get_right_direction(DIRECTION_NORTH) == DIRECTION_EAST);
+    CHECK(get_right_direction(DIRECTION_EAST) == DIRECTION_SOUTH);
+    CHECK(get_right_direction(DIRECTION_SOUTH) == DIRECTION_WEST);
+    CHECK(get_right_direction(DIRECTION_WEST) == DIRECTION_NORTH);
+}
+
+TEST(MazeSolverCommonTests, GetOppositeDirectionReturnsExpectedDirection)
+{
+    CHECK(get_opposite_direction(DIRECTION_NORTH) == DIRECTION_SOUTH);
+    CHECK(get_opposite_direction(DIRECTION_EAST) == DIRECTION_WEST);
+    CHECK(get_opposite_direction(DIRECTION_SOUTH) == DIRECTION_NORTH);
+    CHECK(get_opposite_direction(DIRECTION_WEST) == DIRECTION_EAST);
+}
+
+TEST(MazeSolverCommonTests, GetTurnRequiredReturnsExpectedMovement)
+{
+    CHECK(get_turn_required(DIRECTION_NORTH, DIRECTION_NORTH) == MOVE_FORWARD);
+    CHECK(get_turn_required(DIRECTION_NORTH, DIRECTION_WEST) == MOVE_LEFT);
+    CHECK(get_turn_required(DIRECTION_NORTH, DIRECTION_EAST) == MOVE_RIGHT);
+    CHECK(get_turn_required(DIRECTION_NORTH, DIRECTION_SOUTH) == MOVE_TURN_AROUND);
+    CHECK(get_turn_required(DIRECTION_EAST, DIRECTION_NORTH) == MOVE_LEFT);
+    CHECK(get_turn_required(DIRECTION_EAST, DIRECTION_SOUTH) == MOVE_RIGHT);
+    CHECK(get_turn_required(DIRECTION_EAST, DIRECTION_WEST) == MOVE_TURN_AROUND);
+}
+
+TEST(MazeSolverCommonTests, WallQueriesReturnExpectedValues)
+{
+    initialize_4_by_4_maze();
+
+    mock().expectOneCall("is_left_wall_present")
+          .andReturnValue(true);
+
+    mock().expectOneCall("is_front_wall_present")
+          .andReturnValue(false);
+
+    mock().expectOneCall("is_right_wall_present")
+          .andReturnValue(true);
+
+    update_current_cell_walls();
+
+    CHECK(is_wall_known_at_coordinate({0u,0u}, DIRECTION_NORTH));
+
+    CHECK_FALSE(is_wall_present_at_coordinate({0u,0u}, DIRECTION_NORTH));
+
+    CHECK(is_wall_present_at_coordinate({0u,0u}, DIRECTION_WEST));
 }
 
 TEST(MazeSolverCommonTests, UpdateCurrentCellWallsFacingNorthUpdatesMap)
@@ -431,6 +548,26 @@ TEST(MazeSolverCommonTests, UpdateCurrentCellWallsFacingWestUpdatesMap)
     CHECK(is_right_wall_present_in_map());
 }
 
+TEST(MazeSolverCommonTests, UpdatingWallUpdatesNeighborCell)
+{
+    initialize_4_by_4_maze();
+
+    mock().expectOneCall("is_left_wall_present")
+          .andReturnValue(true);
+
+    mock().expectOneCall("is_front_wall_present")
+          .andReturnValue(false);
+
+    mock().expectOneCall("is_right_wall_present")
+          .andReturnValue(true);
+
+    update_current_cell_walls();
+
+    CHECK(is_wall_known_at_coordinate({0u,1u}, DIRECTION_SOUTH));
+
+    CHECK_FALSE(is_wall_present_at_coordinate({0u,1u}, DIRECTION_SOUTH));
+}
+
 TEST(MazeSolverCommonTests, IsSolverTimeoutReturnsFalseBeforeTimeout)
 {
     struct maze_solver_config cfg{create_default_maze_solver_config()};
@@ -535,6 +672,13 @@ TEST(MazeSolverCommonTests, EstimateReturnToStartTimeSecReturnsMaxWhenNoPathExis
     execute_move(MOVE_FORWARD);
 
     CHECK(estimate_return_to_start_time_sec() == UINT32_MAX);
+}
+
+TEST(MazeSolverCommonTests, EstimateReturnToStartTimeIsZeroWhenAlreadyAtStart)
+{
+    initialize_4_by_4_maze();
+
+    CHECK(estimate_return_to_start_time_sec() == 0u);
 }
 
 TEST(MazeSolverCommonTests, EstimateBestPathToGoalTimeSecReturnsShortestKnownPathTime)
