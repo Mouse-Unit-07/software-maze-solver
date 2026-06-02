@@ -12,6 +12,7 @@ target_include_directories(wall_follower_lib PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}
 )
 
-target_link_libraries(wall_follower_lib PRIVATE
+target_link_libraries(wall_follower_lib PUBLIC
+    maze_solver_common_lib
     mouse_driver_lib
 )
