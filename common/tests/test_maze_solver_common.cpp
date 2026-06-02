@@ -359,6 +359,35 @@ TEST(MazeSolverCommonTests, IsMouseAtGoalReturnsTrueAtStartForTwoByTwoMaze)
     CHECK(is_mouse_at_goal());
 }
 
+TEST(MazeSolverCommonTests, IsCellFrontierReturnsTrueWhenAnyWallIsUnknown)
+{
+    initialize_4_by_4_maze();
+
+    /* start cell only has S/W known from maze boundaries */
+    CHECK(is_cell_frontier({0u, 0u}));
+}
+
+TEST(MazeSolverCommonTests, IsCellFrontierReturnsFalseWhenAllWallsAreKnown)
+{
+    initialize_4_by_4_maze();
+
+    /* S and W are already known from boundary initialization,
+     * so just need to discover N and E using wall sensors.
+     */
+    mock().expectOneCall("is_left_wall_present")
+          .andReturnValue(true);   /* west */
+
+    mock().expectOneCall("is_front_wall_present")
+          .andReturnValue(false);  /* north */
+
+    mock().expectOneCall("is_right_wall_present")
+          .andReturnValue(false);  /* east */
+
+    update_current_cell_walls();
+
+    CHECK_FALSE(is_cell_frontier({0u, 0u}));
+}
+
 TEST(MazeSolverCommonTests, GetCurrentCoordinatesAndDirectionReturnMouseState)
 {
     initialize_4_by_4_maze();

@@ -26,7 +26,6 @@ enum
 /*----------------------------------------------------------------------------*/
 /*                         Private Function Prototypes                        */
 /*----------------------------------------------------------------------------*/
-static bool is_cell_frontier(struct coordinates coord);
 static void build_distance_map_to_goal(uint16_t distance[][MAP_DIMENSION_SIZE]);
 static void build_distance_map_to_frontier(uint16_t distance[][MAP_DIMENSION_SIZE]);
 static bool enqueue_neighbor(struct coordinates current, enum direction dir, uint16_t next_distance,
@@ -107,29 +106,6 @@ enum movement determine_partial_flood_fill_move(void)
     }
 
     return choose_best_neighbor(distance);
-}
-
-static bool is_cell_frontier(struct coordinates coord)
-{
-    struct map_cell cell = get_maze_cell(coord.x, coord.y);
-
-    if ((cell.flags & CELL_NORTH_WALL_KNOWN) == 0u) {
-        return true;
-    }
-
-    if ((cell.flags & CELL_EAST_WALL_KNOWN) == 0u) {
-        return true;
-    }
-
-    if ((cell.flags & CELL_SOUTH_WALL_KNOWN) == 0u) {
-        return true;
-    }
-
-    if ((cell.flags & CELL_WEST_WALL_KNOWN) == 0u) {
-        return true;
-    }
-
-    return false;
 }
 
 static void build_distance_map_to_goal(uint16_t distance[][MAP_DIMENSION_SIZE])

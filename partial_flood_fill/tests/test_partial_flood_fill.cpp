@@ -54,6 +54,12 @@ void update_current_cell_walls(void)
     mock().actualCall("update_current_cell_walls");
 }
 
+bool is_cell_frontier(struct coordinates coord)
+{
+    return mock().actualCall("is_cell_frontier")
+        .returnBoolValue();
+}
+
 void execute_move(enum movement move)
 {
     mock().actualCall("execute_move")
@@ -165,18 +171,6 @@ enum movement get_turn_required(enum direction from,
         .withUnsignedIntParameter("from", (unsigned int)from)
         .withUnsignedIntParameter("to", (unsigned int)to)
         .returnUnsignedIntValue();
-}
-
-struct map_cell get_maze_cell(uint8_t x, uint8_t y)
-{
-    struct map_cell cell;
-
-    cell.flags = (uint8_t)mock().actualCall("get_maze_cell")
-                     .withUnsignedIntParameter("x", x)
-                     .withUnsignedIntParameter("y", y)
-                     .returnUnsignedIntValue();
-
-    return cell;
 }
 
 }

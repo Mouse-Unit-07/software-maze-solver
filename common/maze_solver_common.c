@@ -168,6 +168,29 @@ void update_current_cell_walls(void)
     }
 }
 
+bool is_cell_frontier(struct coordinates coord)
+{
+    struct map_cell cell = maze[coord.y][coord.x];
+
+    if ((cell.flags & CELL_NORTH_WALL_KNOWN) == 0u) {
+        return true;
+    }
+
+    if ((cell.flags & CELL_EAST_WALL_KNOWN) == 0u) {
+        return true;
+    }
+
+    if ((cell.flags & CELL_SOUTH_WALL_KNOWN) == 0u) {
+        return true;
+    }
+
+    if ((cell.flags & CELL_WEST_WALL_KNOWN) == 0u) {
+        return true;
+    }
+
+    return false;
+}
+
 struct coordinates get_current_coordinates(void)
 {
     return mouse.coordinates;

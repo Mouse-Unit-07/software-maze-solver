@@ -89,6 +89,7 @@ void set_goal_found(bool found);
 bool is_goal_cell(struct coordinates coord);
 bool is_mouse_at_goal(void);
 void update_current_cell_walls(void);
+bool is_cell_frontier(struct coordinates coord);
 struct coordinates get_current_coordinates(void);
 enum direction get_current_direction(void);
 
