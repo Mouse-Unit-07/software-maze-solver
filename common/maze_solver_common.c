@@ -470,13 +470,13 @@ void print_maze_solver_state(void)
 {
     uint32_t size = maze_solver_cfg.maze_size;
 
-    printf("\n");
-    printf("========================================\n");
-    printf("Mouse: (%u,%u) Dir:%c\n", mouse.coordinates.x, mouse.coordinates.y,
+    printf("\r\n");
+    printf("========================================\r\n");
+    printf("Mouse: (%u,%u) Dir:%c\r\n", mouse.coordinates.x, mouse.coordinates.y,
            direction_to_char(mouse.direction));
-    printf("Goal Found: %s\n", goal_found ? "YES" : "NO");
-    printf("Remaining Time: %lu sec\n", (unsigned long)get_solver_remaining_time_sec());
-    printf("========================================\n");
+    printf("Goal Found: %s\r\n", goal_found ? "YES" : "NO");
+    printf("Remaining Time: %lu sec\r\n", (unsigned long)get_solver_remaining_time_sec());
+    printf("========================================\r\n");
 
     for (int32_t y = (int32_t)size - 1; y >= 0; y--) {
 
@@ -494,7 +494,7 @@ void print_maze_solver_state(void)
                 printf("???");
             }
         }
-        printf("+\n");
+        printf("+\r\n");
 
         /* vertical walls and cell contents */
         for (uint32_t x = 0u; x < size; x++) {
@@ -515,13 +515,13 @@ void print_maze_solver_state(void)
                 printf("   ");
             }
         }
-        printf("|\n");
+        printf("|\r\n");
     }
 
     for (uint32_t x = 0u; x < size; x++) {
         printf("+---");
     }
-    printf("+\n");
+    printf("+\r\n");
 }
 
 /*----------------------------------------------------------------------------*/
