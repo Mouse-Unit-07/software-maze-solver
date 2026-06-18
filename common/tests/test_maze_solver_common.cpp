@@ -596,6 +596,27 @@ TEST(MazeSolverCommonTests, UpdatingWallUpdatesNeighborCell)
     CHECK_FALSE(is_wall_present_at_coordinate({0u,1u}, DIRECTION_SOUTH));
 }
 
+TEST(MazeSolverCommonTests, KnownWallsAreNotOverwritten)
+{
+    initialize_4_by_4_maze();
+
+    /* Start cell east wall initialized as present */
+
+    mock().expectOneCall("is_left_wall_present")
+          .andReturnValue(true);
+
+    mock().expectOneCall("is_front_wall_present")
+          .andReturnValue(false);
+
+    mock().expectOneCall("is_right_wall_present")
+          .andReturnValue(false);  /* attempt to clear east wall */
+
+    update_current_cell_walls();
+
+    CHECK(is_wall_known_at_coordinate({0u,0u}, DIRECTION_EAST));
+    CHECK(is_wall_present_at_coordinate({0u,0u}, DIRECTION_EAST));
+}
+
 TEST(MazeSolverCommonTests, IsSolverTimeoutReturnsFalseBeforeTimeout)
 {
     struct maze_solver_config cfg{create_default_maze_solver_config()};

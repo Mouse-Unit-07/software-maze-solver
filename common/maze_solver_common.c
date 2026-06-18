@@ -535,6 +535,10 @@ static void reset_maze_solver_common(void)
 static void update_wall_flags(struct map_cell *cell, uint8_t known_flag, uint8_t present_flag,
                               bool present)
 {
+    if ((cell->flags & known_flag) != 0u) {
+        return;
+    }
+
     cell->flags |= known_flag;
 
     if (present) {
