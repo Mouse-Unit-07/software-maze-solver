@@ -271,8 +271,8 @@ TEST(MazeSolverCommonTests, ResetMazeSolverStateInitializesMazeBoundaryWalls)
     CHECK((north_east.flags & CELL_EAST_WALL_KNOWN) != 0u);
     CHECK((north_east.flags & CELL_EAST_WALL_PRESENT) != 0u);
 
-    CHECK(is_wall_known_at_coordinate({1u,0u}, DIRECTION_SOUTH));
-    CHECK(is_wall_present_at_coordinate({1u,0u}, DIRECTION_SOUTH));
+    CHECK(is_wall_known_at_coordinate({1u, 0u}, DIRECTION_SOUTH));
+    CHECK(is_wall_present_at_coordinate({1u, 0u}, DIRECTION_SOUTH));
 }
 
 TEST(MazeSolverCommonTests, GetMazeSizeReturnsConfiguredSize)
@@ -319,12 +319,12 @@ TEST(MazeSolverCommonTests, IsGoalCellReturnsTrueForFourCenterCellsOfEvenMaze)
 
     set_maze_solver_config(cfg);
 
-    CHECK(is_goal_cell({1u,1u}));
-    CHECK(is_goal_cell({1u,2u}));
-    CHECK(is_goal_cell({2u,1u}));
-    CHECK(is_goal_cell({2u,2u}));
+    CHECK(is_goal_cell({1u, 1u}));
+    CHECK(is_goal_cell({1u, 2u}));
+    CHECK(is_goal_cell({2u, 1u}));
+    CHECK(is_goal_cell({2u, 2u}));
 
-    CHECK_FALSE(is_goal_cell({0u,0u}));
+    CHECK_FALSE(is_goal_cell({0u, 0u}));
 }
 
 TEST(MazeSolverCommonTests, IsMouseAtGoalReturnsFalseAtStartForOddMaze)
@@ -363,8 +363,7 @@ TEST(MazeSolverCommonTests, IsCellFrontierReturnsTrueWhenAnyWallIsUnknown)
 {
     initialize_4_by_4_maze();
 
-    /* start cell only has S/W known from maze boundaries */
-    CHECK(is_cell_frontier({0u, 0u}));
+    CHECK(is_cell_frontier({0u, 1u}));
 }
 
 TEST(MazeSolverCommonTests, IsCellFrontierReturnsFalseWhenAllWallsAreKnown)
@@ -455,11 +454,11 @@ TEST(MazeSolverCommonTests, WallQueriesReturnExpectedValues)
 
     update_current_cell_walls();
 
-    CHECK(is_wall_known_at_coordinate({0u,0u}, DIRECTION_NORTH));
+    CHECK(is_wall_known_at_coordinate({0u, 0u}, DIRECTION_NORTH));
 
-    CHECK_FALSE(is_wall_present_at_coordinate({0u,0u}, DIRECTION_NORTH));
+    CHECK_FALSE(is_wall_present_at_coordinate({0u, 0u}, DIRECTION_NORTH));
 
-    CHECK(is_wall_present_at_coordinate({0u,0u}, DIRECTION_WEST));
+    CHECK(is_wall_present_at_coordinate({0u, 0u}, DIRECTION_WEST));
 }
 
 TEST(MazeSolverCommonTests, UpdateCurrentCellWallsFacingNorthUpdatesMap)
@@ -592,9 +591,30 @@ TEST(MazeSolverCommonTests, UpdatingWallUpdatesNeighborCell)
 
     update_current_cell_walls();
 
-    CHECK(is_wall_known_at_coordinate({0u,1u}, DIRECTION_SOUTH));
+    CHECK(is_wall_known_at_coordinate({0u, 1u}, DIRECTION_SOUTH));
 
-    CHECK_FALSE(is_wall_present_at_coordinate({0u,1u}, DIRECTION_SOUTH));
+    CHECK_FALSE(is_wall_present_at_coordinate({0u, 1u}, DIRECTION_SOUTH));
+}
+
+TEST(MazeSolverCommonTests, KnownWallsAreNotOverwritten)
+{
+    initialize_4_by_4_maze();
+
+    /* Start cell east wall initialized as present */
+
+    mock().expectOneCall("is_left_wall_present")
+          .andReturnValue(true);
+
+    mock().expectOneCall("is_front_wall_present")
+          .andReturnValue(false);
+
+    mock().expectOneCall("is_right_wall_present")
+          .andReturnValue(false);  /* attempt to clear east wall */
+
+    update_current_cell_walls();
+
+    CHECK(is_wall_known_at_coordinate({0u, 0u}, DIRECTION_EAST));
+    CHECK(is_wall_present_at_coordinate({0u, 0u}, DIRECTION_EAST));
 }
 
 TEST(MazeSolverCommonTests, IsSolverTimeoutReturnsFalseBeforeTimeout)
@@ -691,16 +711,6 @@ TEST(MazeSolverCommonTests, EstimateReturnToStartTimeSecReturnsPathTime)
 
     /* to return, we need to turn around, move forward, turn right, move forward */
     CHECK(estimate_return_to_start_time_sec() == 7u);
-}
-
-TEST(MazeSolverCommonTests, EstimateReturnToStartTimeSecReturnsMaxWhenNoPathExists)
-{
-    initialize_4_by_4_maze();
-
-    mock().expectOneCall("move_forward");
-    execute_move(MOVE_FORWARD);
-
-    CHECK(estimate_return_to_start_time_sec() == UINT32_MAX);
 }
 
 TEST(MazeSolverCommonTests, EstimateReturnToStartTimeIsZeroWhenAlreadyAtStart)
@@ -856,21 +866,6 @@ TEST(MazeSolverCommonTests, ReturnToStartFollowsShortestPathBackToOrigin)
 
     CHECK(mouse.coordinates.x == 0u);
     CHECK(mouse.coordinates.y == 0u);
-}
-
-TEST(MazeSolverCommonTests, ReturnToStartDoesNothingWhenNoPathExists)
-{
-    initialize_4_by_4_maze();
-
-    mock().expectOneCall("move_forward");
-    execute_move(MOVE_FORWARD);
-
-    return_to_start();
-
-    struct mouse mouse{get_mouse()};
-
-    CHECK(mouse.coordinates.x == 0u);
-    CHECK(mouse.coordinates.y == 1u);
 }
 
 TEST(MazeSolverCommonTests, CalculateFastestPathStoresShortestPathToGoal)

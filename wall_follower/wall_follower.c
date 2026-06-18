@@ -31,8 +31,8 @@ void run_wall_follower(enum wall_follower_mode mode, bool enable_print)
     reset_maze_solver_state();
 
     while (!is_solver_timeout() && !is_mouse_at_goal()) {
-        update_current_cell_walls();
         execute_move(determine_wall_follower_move(mode));
+        update_current_cell_walls();
 
         if (enable_print) {
             print_maze_solver_state();
@@ -53,8 +53,8 @@ void run_wall_follower(enum wall_follower_mode mode, bool enable_print)
             break;
         }
 
-        update_current_cell_walls();
         execute_move(determine_wall_follower_move(mode));
+        update_current_cell_walls();
 
         if (enable_print) {
             print_maze_solver_state();

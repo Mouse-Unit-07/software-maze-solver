@@ -132,6 +132,7 @@ TEST_GROUP(WallFollowerTests)
     void setup() override
     {
         mock().clear();
+        mock().strictOrder();
     }
 
     void teardown() override
@@ -242,13 +243,13 @@ TEST(WallFollowerTests, RunWallFollowerExploresMaze)
     mock().expectOneCall("is_mouse_at_goal")
           .andReturnValue(false);
 
-    mock().expectOneCall("update_current_cell_walls");
-
     mock().expectOneCall("is_left_wall_present_in_map")
           .andReturnValue(false);
 
     mock().expectOneCall("execute_move")
           .withUnsignedIntParameter("move", MOVE_LEFT);
+
+    mock().expectOneCall("update_current_cell_walls");
 
     mock().expectOneCall("is_solver_timeout")
           .andReturnValue(false);
@@ -282,13 +283,13 @@ TEST(WallFollowerTests, RunWallFollowerPrintsWhenEnabled)
     mock().expectOneCall("is_mouse_at_goal")
           .andReturnValue(false);
 
-    mock().expectOneCall("update_current_cell_walls");
-
     mock().expectOneCall("is_left_wall_present_in_map")
           .andReturnValue(false);
 
     mock().expectOneCall("execute_move")
           .withUnsignedIntParameter("move", MOVE_LEFT);
+
+    mock().expectOneCall("update_current_cell_walls");
 
     mock().expectOneCall("print_maze_solver_state");
 
