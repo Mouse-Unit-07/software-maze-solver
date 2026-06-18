@@ -271,8 +271,8 @@ TEST(MazeSolverCommonTests, ResetMazeSolverStateInitializesMazeBoundaryWalls)
     CHECK((north_east.flags & CELL_EAST_WALL_KNOWN) != 0u);
     CHECK((north_east.flags & CELL_EAST_WALL_PRESENT) != 0u);
 
-    CHECK(is_wall_known_at_coordinate({1u,0u}, DIRECTION_SOUTH));
-    CHECK(is_wall_present_at_coordinate({1u,0u}, DIRECTION_SOUTH));
+    CHECK(is_wall_known_at_coordinate({1u, 0u}, DIRECTION_SOUTH));
+    CHECK(is_wall_present_at_coordinate({1u, 0u}, DIRECTION_SOUTH));
 }
 
 TEST(MazeSolverCommonTests, GetMazeSizeReturnsConfiguredSize)
@@ -319,12 +319,12 @@ TEST(MazeSolverCommonTests, IsGoalCellReturnsTrueForFourCenterCellsOfEvenMaze)
 
     set_maze_solver_config(cfg);
 
-    CHECK(is_goal_cell({1u,1u}));
-    CHECK(is_goal_cell({1u,2u}));
-    CHECK(is_goal_cell({2u,1u}));
-    CHECK(is_goal_cell({2u,2u}));
+    CHECK(is_goal_cell({1u, 1u}));
+    CHECK(is_goal_cell({1u, 2u}));
+    CHECK(is_goal_cell({2u, 1u}));
+    CHECK(is_goal_cell({2u, 2u}));
 
-    CHECK_FALSE(is_goal_cell({0u,0u}));
+    CHECK_FALSE(is_goal_cell({0u, 0u}));
 }
 
 TEST(MazeSolverCommonTests, IsMouseAtGoalReturnsFalseAtStartForOddMaze)
@@ -454,11 +454,11 @@ TEST(MazeSolverCommonTests, WallQueriesReturnExpectedValues)
 
     update_current_cell_walls();
 
-    CHECK(is_wall_known_at_coordinate({0u,0u}, DIRECTION_NORTH));
+    CHECK(is_wall_known_at_coordinate({0u, 0u}, DIRECTION_NORTH));
 
-    CHECK_FALSE(is_wall_present_at_coordinate({0u,0u}, DIRECTION_NORTH));
+    CHECK_FALSE(is_wall_present_at_coordinate({0u, 0u}, DIRECTION_NORTH));
 
-    CHECK(is_wall_present_at_coordinate({0u,0u}, DIRECTION_WEST));
+    CHECK(is_wall_present_at_coordinate({0u, 0u}, DIRECTION_WEST));
 }
 
 TEST(MazeSolverCommonTests, UpdateCurrentCellWallsFacingNorthUpdatesMap)
@@ -591,9 +591,9 @@ TEST(MazeSolverCommonTests, UpdatingWallUpdatesNeighborCell)
 
     update_current_cell_walls();
 
-    CHECK(is_wall_known_at_coordinate({0u,1u}, DIRECTION_SOUTH));
+    CHECK(is_wall_known_at_coordinate({0u, 1u}, DIRECTION_SOUTH));
 
-    CHECK_FALSE(is_wall_present_at_coordinate({0u,1u}, DIRECTION_SOUTH));
+    CHECK_FALSE(is_wall_present_at_coordinate({0u, 1u}, DIRECTION_SOUTH));
 }
 
 TEST(MazeSolverCommonTests, KnownWallsAreNotOverwritten)
@@ -613,8 +613,8 @@ TEST(MazeSolverCommonTests, KnownWallsAreNotOverwritten)
 
     update_current_cell_walls();
 
-    CHECK(is_wall_known_at_coordinate({0u,0u}, DIRECTION_EAST));
-    CHECK(is_wall_present_at_coordinate({0u,0u}, DIRECTION_EAST));
+    CHECK(is_wall_known_at_coordinate({0u, 0u}, DIRECTION_EAST));
+    CHECK(is_wall_present_at_coordinate({0u, 0u}, DIRECTION_EAST));
 }
 
 TEST(MazeSolverCommonTests, IsSolverTimeoutReturnsFalseBeforeTimeout)
