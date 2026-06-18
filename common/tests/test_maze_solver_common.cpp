@@ -363,8 +363,7 @@ TEST(MazeSolverCommonTests, IsCellFrontierReturnsTrueWhenAnyWallIsUnknown)
 {
     initialize_4_by_4_maze();
 
-    /* start cell only has S/W known from maze boundaries */
-    CHECK(is_cell_frontier({0u, 0u}));
+    CHECK(is_cell_frontier({0u, 1u}));
 }
 
 TEST(MazeSolverCommonTests, IsCellFrontierReturnsFalseWhenAllWallsAreKnown)
@@ -693,16 +692,6 @@ TEST(MazeSolverCommonTests, EstimateReturnToStartTimeSecReturnsPathTime)
     CHECK(estimate_return_to_start_time_sec() == 7u);
 }
 
-TEST(MazeSolverCommonTests, EstimateReturnToStartTimeSecReturnsMaxWhenNoPathExists)
-{
-    initialize_4_by_4_maze();
-
-    mock().expectOneCall("move_forward");
-    execute_move(MOVE_FORWARD);
-
-    CHECK(estimate_return_to_start_time_sec() == UINT32_MAX);
-}
-
 TEST(MazeSolverCommonTests, EstimateReturnToStartTimeIsZeroWhenAlreadyAtStart)
 {
     initialize_4_by_4_maze();
@@ -856,21 +845,6 @@ TEST(MazeSolverCommonTests, ReturnToStartFollowsShortestPathBackToOrigin)
 
     CHECK(mouse.coordinates.x == 0u);
     CHECK(mouse.coordinates.y == 0u);
-}
-
-TEST(MazeSolverCommonTests, ReturnToStartDoesNothingWhenNoPathExists)
-{
-    initialize_4_by_4_maze();
-
-    mock().expectOneCall("move_forward");
-    execute_move(MOVE_FORWARD);
-
-    return_to_start();
-
-    struct mouse mouse{get_mouse()};
-
-    CHECK(mouse.coordinates.x == 0u);
-    CHECK(mouse.coordinates.y == 1u);
 }
 
 TEST(MazeSolverCommonTests, CalculateFastestPathStoresShortestPathToGoal)

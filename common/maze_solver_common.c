@@ -92,6 +92,9 @@ void reset_maze_solver_state(void)
         set_wall((struct coordinates){0u, y}, DIRECTION_WEST, true);
         set_wall((struct coordinates){size - 1u, y}, DIRECTION_EAST, true);
     }
+
+    set_wall((struct coordinates){0u, 0u}, DIRECTION_NORTH, false);
+    set_wall((struct coordinates){0u, 0u}, DIRECTION_EAST, true);
 }
 
 uint32_t get_maze_size(void)
