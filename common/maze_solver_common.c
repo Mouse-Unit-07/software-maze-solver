@@ -19,6 +19,8 @@
 /*----------------------------------------------------------------------------*/
 /*                         Private Function Prototypes                        */
 /*----------------------------------------------------------------------------*/
+static void reset_maze_solver_common(void);
+
 static void update_wall_flags(struct map_cell *cell, uint8_t known_flag, uint8_t present_flag,
                               bool present);
 static void set_wall(struct coordinates coord, enum direction dir, bool present);
@@ -49,22 +51,12 @@ static bool goal_found = false;
 /*----------------------------------------------------------------------------*/
 void init_maze_solver_common(void)
 {
-    memset(&maze_solver_cfg, 0, sizeof(maze_solver_cfg));
-    memset(&mouse, 0, sizeof(mouse));
-    memset(maze, 0, sizeof(maze));
-    memset(&fastest_path, 0, sizeof(fastest_path));
-    solver_start_time_sec = get_current_global_time_sec();
-    goal_found = false;
+    reset_maze_solver_common();
 }
 
 void deinit_maze_solver_common(void)
 {
-    memset(&maze_solver_cfg, 0, sizeof(maze_solver_cfg));
-    memset(&mouse, 0, sizeof(mouse));
-    memset(maze, 0, sizeof(maze));
-    memset(&fastest_path, 0, sizeof(fastest_path));
-    solver_start_time_sec = get_current_global_time_sec();
-    goal_found = false;
+    reset_maze_solver_common();
 }
 
 void set_maze_solver_config(struct maze_solver_config cfg)
@@ -527,6 +519,16 @@ void print_maze_solver_state(void)
 /*----------------------------------------------------------------------------*/
 /*                        Private Function Definitions                        */
 /*----------------------------------------------------------------------------*/
+static void reset_maze_solver_common(void)
+{
+    memset(&maze_solver_cfg, 0, sizeof(maze_solver_cfg));
+    memset(&mouse, 0, sizeof(mouse));
+    memset(maze, 0, sizeof(maze));
+    memset(&fastest_path, 0, sizeof(fastest_path));
+    solver_start_time_sec = get_current_global_time_sec();
+    goal_found = false;
+}
+
 static void update_wall_flags(struct map_cell *cell, uint8_t known_flag, uint8_t present_flag,
                               bool present)
 {
