@@ -49,11 +49,6 @@ bool is_mouse_at_goal(void)
         .returnBoolValue();
 }
 
-void update_current_cell_walls(void)
-{
-    mock().actualCall("update_current_cell_walls");
-}
-
 void execute_move(enum movement move)
 {
     mock().actualCall("execute_move")
@@ -161,7 +156,7 @@ TEST(WallFollowerTests, LeftFollowerMovesForwardWhenLeftBlocked)
     mock().expectOneCall("is_front_wall_present_in_map")
           .andReturnValue(false);
 
-    CHECK(determine_wall_follower_move(WALL_FOLLOWER_LEFT) == MOVE_FORWARD);
+    CHECK(determine_wall_follower_move(WALL_FOLLOWER_LEFT) == MOVE_FORWARD_CONTINUOUS);
 }
 
 TEST(WallFollowerTests, LeftFollowerTurnsRightWhenLeftAndFrontBlocked)
@@ -249,8 +244,6 @@ TEST(WallFollowerTests, RunWallFollowerExploresMaze)
     mock().expectOneCall("execute_move")
           .withUnsignedIntParameter("move", MOVE_LEFT);
 
-    mock().expectOneCall("update_current_cell_walls");
-
     mock().expectOneCall("is_solver_timeout")
           .andReturnValue(false);
 
@@ -288,8 +281,6 @@ TEST(WallFollowerTests, RunWallFollowerPrintsWhenEnabled)
 
     mock().expectOneCall("execute_move")
           .withUnsignedIntParameter("move", MOVE_LEFT);
-
-    mock().expectOneCall("update_current_cell_walls");
 
     mock().expectOneCall("print_maze_solver_state");
 

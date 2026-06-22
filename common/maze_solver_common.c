@@ -135,34 +135,6 @@ bool is_mouse_at_goal(void)
            && ((mouse.coordinates.y == center_low) || (mouse.coordinates.y == center_high));
 }
 
-void update_current_cell_walls(void)
-{
-    switch (mouse.direction) {
-        case DIRECTION_NORTH:
-            set_wall(mouse.coordinates, DIRECTION_WEST, is_left_wall_present());
-            set_wall(mouse.coordinates, DIRECTION_NORTH, is_front_wall_present());
-            set_wall(mouse.coordinates, DIRECTION_EAST, is_right_wall_present());
-            break;
-        case DIRECTION_EAST:
-            set_wall(mouse.coordinates, DIRECTION_NORTH, is_left_wall_present());
-            set_wall(mouse.coordinates, DIRECTION_EAST, is_front_wall_present());
-            set_wall(mouse.coordinates, DIRECTION_SOUTH, is_right_wall_present());
-            break;
-        case DIRECTION_SOUTH:
-            set_wall(mouse.coordinates, DIRECTION_EAST, is_left_wall_present());
-            set_wall(mouse.coordinates, DIRECTION_SOUTH, is_front_wall_present());
-            set_wall(mouse.coordinates, DIRECTION_WEST, is_right_wall_present());
-            break;
-        case DIRECTION_WEST:
-            set_wall(mouse.coordinates, DIRECTION_SOUTH, is_left_wall_present());
-            set_wall(mouse.coordinates, DIRECTION_WEST, is_front_wall_present());
-            set_wall(mouse.coordinates, DIRECTION_NORTH, is_right_wall_present());
-            break;
-        default:
-            break;
-    }
-}
-
 bool is_cell_frontier(struct coordinates coord)
 {
     struct map_cell cell = maze[coord.y][coord.x];
@@ -407,31 +379,56 @@ uint32_t estimate_best_path_to_goal_time_sec(void)
 
 void execute_move(enum movement move)
 {
+    struct coordinates start = mouse.coordinates;
+    uint32_t steps = 0u;
+
     switch (move) {
         case MOVE_FORWARD:
             move_forward();
             move_mouse_to_next_cell();
+            update_current_cell_walls();
+            break;
+
+        case MOVE_FORWARD_CONTINUOUS:
+            steps = move_forward_until_turn_or_intersection_and_return_steps();
+            for (uint32_t i = 0u; i < steps; i++) {
+                move_mouse_to_next_cell();
+            }
+            update_corridor_cells(start, mouse.direction, steps);
+            update_current_cell_walls();
             break;
 
         case MOVE_LEFT:
             rotate_counter_clockwise_90_deg();
             mouse.direction = get_left_direction(mouse.direction);
-            move_forward();
-            move_mouse_to_next_cell();
+            steps = move_forward_until_turn_or_intersection_and_return_steps();
+            for (uint32_t i = 0u; i < steps; i++) {
+                move_mouse_to_next_cell();
+            }
+            update_corridor_cells(start, mouse.direction, steps);
+            update_current_cell_walls();
             break;
 
         case MOVE_RIGHT:
             rotate_clockwise_90_deg();
             mouse.direction = get_right_direction(mouse.direction);
-            move_forward();
-            move_mouse_to_next_cell();
+            steps = move_forward_until_turn_or_intersection_and_return_steps();
+            for (uint32_t i = 0u; i < steps; i++) {
+                move_mouse_to_next_cell();
+            }
+            update_corridor_cells(start, mouse.direction, steps);
+            update_current_cell_walls();
             break;
 
         case MOVE_TURN_AROUND:
             rotate_180_deg();
             mouse.direction = get_opposite_direction(mouse.direction);
-            move_forward();
-            move_mouse_to_next_cell();
+            steps = move_forward_until_turn_or_intersection_and_return_steps();
+            for (uint32_t i = 0u; i < steps; i++) {
+                move_mouse_to_next_cell();
+            }
+            update_corridor_cells(start, mouse.direction, steps);
+            update_current_cell_walls();
             break;
         default:
             break;
@@ -522,6 +519,82 @@ void print_maze_solver_state(void)
 /*----------------------------------------------------------------------------*/
 /*                        Private Function Definitions                        */
 /*----------------------------------------------------------------------------*/
+void update_current_cell_walls(void)
+{
+    switch (mouse.direction) {
+        case DIRECTION_NORTH:
+            set_wall(mouse.coordinates, DIRECTION_WEST, is_left_wall_present());
+            set_wall(mouse.coordinates, DIRECTION_NORTH, is_front_wall_present());
+            set_wall(mouse.coordinates, DIRECTION_EAST, is_right_wall_present());
+            break;
+        case DIRECTION_EAST:
+            set_wall(mouse.coordinates, DIRECTION_NORTH, is_left_wall_present());
+            set_wall(mouse.coordinates, DIRECTION_EAST, is_front_wall_present());
+            set_wall(mouse.coordinates, DIRECTION_SOUTH, is_right_wall_present());
+            break;
+        case DIRECTION_SOUTH:
+            set_wall(mouse.coordinates, DIRECTION_EAST, is_left_wall_present());
+            set_wall(mouse.coordinates, DIRECTION_SOUTH, is_front_wall_present());
+            set_wall(mouse.coordinates, DIRECTION_WEST, is_right_wall_present());
+            break;
+        case DIRECTION_WEST:
+            set_wall(mouse.coordinates, DIRECTION_SOUTH, is_left_wall_present());
+            set_wall(mouse.coordinates, DIRECTION_WEST, is_front_wall_present());
+            set_wall(mouse.coordinates, DIRECTION_NORTH, is_right_wall_present());
+            break;
+        default:
+            break;
+    }
+}
+
+void update_corridor_cells(struct coordinates start, enum direction dir, uint32_t steps)
+{
+    if (steps < 2u) {
+        return;
+    }
+
+    struct coordinates cell = start;
+
+    for (uint32_t i = 1u; i < steps; i++) {
+        switch (dir) {
+            case DIRECTION_NORTH:
+                cell.y++;
+                set_wall(cell, DIRECTION_EAST, true);
+                set_wall(cell, DIRECTION_WEST, true);
+                set_wall(cell, DIRECTION_NORTH, false);
+                set_wall(cell, DIRECTION_SOUTH, false);
+                break;
+
+            case DIRECTION_EAST:
+                cell.x++;
+                set_wall(cell, DIRECTION_NORTH, true);
+                set_wall(cell, DIRECTION_SOUTH, true);
+                set_wall(cell, DIRECTION_EAST, false);
+                set_wall(cell, DIRECTION_WEST, false);
+                break;
+
+            case DIRECTION_SOUTH:
+                cell.y--;
+                set_wall(cell, DIRECTION_EAST, true);
+                set_wall(cell, DIRECTION_WEST, true);
+                set_wall(cell, DIRECTION_NORTH, false);
+                set_wall(cell, DIRECTION_SOUTH, false);
+                break;
+
+            case DIRECTION_WEST:
+                cell.x--;
+                set_wall(cell, DIRECTION_NORTH, true);
+                set_wall(cell, DIRECTION_SOUTH, true);
+                set_wall(cell, DIRECTION_EAST, false);
+                set_wall(cell, DIRECTION_WEST, false);
+                break;
+
+            default:
+                break;
+        }
+    }
+}
+
 static void reset_maze_solver_common(void)
 {
     memset(&maze_solver_cfg, 0, sizeof(maze_solver_cfg));

@@ -32,7 +32,6 @@ void run_wall_follower(enum wall_follower_mode mode, bool enable_print)
 
     while (!is_solver_timeout() && !is_mouse_at_goal()) {
         execute_move(determine_wall_follower_move(mode));
-        update_current_cell_walls();
 
         if (enable_print) {
             print_maze_solver_state();
@@ -54,7 +53,6 @@ void run_wall_follower(enum wall_follower_mode mode, bool enable_print)
         }
 
         execute_move(determine_wall_follower_move(mode));
-        update_current_cell_walls();
 
         if (enable_print) {
             print_maze_solver_state();
@@ -85,7 +83,7 @@ enum movement determine_wall_follower_move(enum wall_follower_mode mode)
         }
 
         if (!is_front_wall_present_in_map()) {
-            return MOVE_FORWARD;
+            return MOVE_FORWARD_CONTINUOUS;
         }
 
         if (!is_right_wall_present_in_map()) {
@@ -100,7 +98,7 @@ enum movement determine_wall_follower_move(enum wall_follower_mode mode)
     }
 
     if (!is_front_wall_present_in_map()) {
-        return MOVE_FORWARD;
+        return MOVE_FORWARD_CONTINUOUS;
     }
 
     if (!is_left_wall_present_in_map()) {
