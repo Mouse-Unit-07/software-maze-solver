@@ -75,6 +75,12 @@ void move_forward(void)
     mock().actualCall("move_forward");
 }
 
+uint32_t move_forward_until_turn_or_intersection_and_return_steps(void)
+{
+    return mock().actualCall("move_forward_until_turn_or_intersection_and_return_steps")
+        .returnUnsignedIntValue();
+}
+
 void rotate_clockwise_90_deg(void)
 {
     mock().actualCall("rotate_clockwise_90_deg");
@@ -373,15 +379,9 @@ TEST(MazeSolverCommonTests, IsCellFrontierReturnsFalseWhenAllWallsAreKnown)
     /* S and W are already known from boundary initialization,
      * so just need to discover N and E using wall sensors.
      */
-    mock().expectOneCall("is_left_wall_present")
-          .andReturnValue(true);   /* west */
-
-    mock().expectOneCall("is_front_wall_present")
-          .andReturnValue(false);  /* north */
-
-    mock().expectOneCall("is_right_wall_present")
-          .andReturnValue(false);  /* east */
-
+    mock().expectOneCall("is_left_wall_present").andReturnValue(true);   /* west */
+    mock().expectOneCall("is_front_wall_present").andReturnValue(false);  /* north */
+    mock().expectOneCall("is_right_wall_present").andReturnValue(false);  /* east */
     update_current_cell_walls();
 
     CHECK_FALSE(is_cell_frontier({0u, 0u}));
@@ -392,7 +392,11 @@ TEST(MazeSolverCommonTests, GetCurrentCoordinatesAndDirectionReturnMouseState)
     initialize_4_by_4_maze();
 
     mock().expectOneCall("rotate_clockwise_90_deg");
-    mock().expectOneCall("move_forward");
+    mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
+        .andReturnValue(1u);
+    mock().expectOneCall("is_left_wall_present").andReturnValue(false);
+    mock().expectOneCall("is_front_wall_present").andReturnValue(false);
+    mock().expectOneCall("is_right_wall_present").andReturnValue(false);
 
     execute_move(MOVE_RIGHT);
 
@@ -443,21 +447,13 @@ TEST(MazeSolverCommonTests, WallQueriesReturnExpectedValues)
 {
     initialize_4_by_4_maze();
 
-    mock().expectOneCall("is_left_wall_present")
-          .andReturnValue(true);
-
-    mock().expectOneCall("is_front_wall_present")
-          .andReturnValue(false);
-
-    mock().expectOneCall("is_right_wall_present")
-          .andReturnValue(true);
-
+    mock().expectOneCall("is_left_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_front_wall_present").andReturnValue(false);
+    mock().expectOneCall("is_right_wall_present").andReturnValue(true);
     update_current_cell_walls();
 
     CHECK(is_wall_known_at_coordinate({0u, 0u}, DIRECTION_NORTH));
-
     CHECK_FALSE(is_wall_present_at_coordinate({0u, 0u}, DIRECTION_NORTH));
-
     CHECK(is_wall_present_at_coordinate({0u, 0u}, DIRECTION_WEST));
 }
 
@@ -465,15 +461,9 @@ TEST(MazeSolverCommonTests, UpdateCurrentCellWallsFacingNorthUpdatesMap)
 {
     initialize_4_by_4_maze();
 
-    mock().expectOneCall("is_left_wall_present")
-          .andReturnValue(true);
-
-    mock().expectOneCall("is_front_wall_present")
-          .andReturnValue(false);
-
-    mock().expectOneCall("is_right_wall_present")
-          .andReturnValue(true);
-
+    mock().expectOneCall("is_left_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_front_wall_present").andReturnValue(false);
+    mock().expectOneCall("is_right_wall_present").andReturnValue(true);
     update_current_cell_walls();
 
     CHECK(is_left_wall_known_in_map());
@@ -490,51 +480,19 @@ TEST(MazeSolverCommonTests, UpdateCurrentCellWallsFacingEastUpdatesMap)
 {
     initialize_4_by_4_maze();
 
+    mock().expectOneCall("move_forward");
+    mock().expectOneCall("is_left_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_front_wall_present").andReturnValue(false);
+    mock().expectOneCall("is_right_wall_present").andReturnValue(false);
+    execute_move(MOVE_FORWARD);
+
     mock().expectOneCall("rotate_clockwise_90_deg");
-    mock().expectOneCall("move_forward");
-
+    mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
+        .andReturnValue(1u);
+    mock().expectOneCall("is_left_wall_present").andReturnValue(false);
+    mock().expectOneCall("is_front_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_right_wall_present").andReturnValue(false);
     execute_move(MOVE_RIGHT);
-
-    mock().expectOneCall("is_left_wall_present")
-          .andReturnValue(true);
-
-    mock().expectOneCall("is_front_wall_present")
-          .andReturnValue(false);
-
-    mock().expectOneCall("is_right_wall_present")
-          .andReturnValue(true);
-
-    update_current_cell_walls();
-
-    CHECK(is_left_wall_known_in_map());
-    CHECK(is_left_wall_present_in_map());
-
-    CHECK(is_front_wall_known_in_map());
-    CHECK_FALSE(is_front_wall_present_in_map());
-
-    CHECK(is_right_wall_known_in_map());
-    CHECK(is_right_wall_present_in_map());
-}
-
-TEST(MazeSolverCommonTests, UpdateCurrentCellWallsFacingSouthUpdatesMap)
-{
-    initialize_4_by_4_maze();
-
-    mock().expectOneCall("rotate_180_deg");
-    mock().expectOneCall("move_forward");
-
-    execute_move(MOVE_TURN_AROUND);
-
-    mock().expectOneCall("is_left_wall_present")
-          .andReturnValue(false);
-
-    mock().expectOneCall("is_front_wall_present")
-          .andReturnValue(true);
-
-    mock().expectOneCall("is_right_wall_present")
-          .andReturnValue(false);
-
-    update_current_cell_walls();
 
     CHECK(is_left_wall_known_in_map());
     CHECK_FALSE(is_left_wall_present_in_map());
@@ -546,25 +504,51 @@ TEST(MazeSolverCommonTests, UpdateCurrentCellWallsFacingSouthUpdatesMap)
     CHECK_FALSE(is_right_wall_present_in_map());
 }
 
+TEST(MazeSolverCommonTests, UpdateCurrentCellWallsFacingSouthUpdatesMap)
+{
+    initialize_4_by_4_maze();
+
+    mock().expectOneCall("move_forward");
+    mock().expectOneCall("is_left_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_front_wall_present").andReturnValue(false);
+    mock().expectOneCall("is_right_wall_present").andReturnValue(false);
+    execute_move(MOVE_FORWARD);
+
+    mock().expectOneCall("rotate_180_deg");
+    mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
+        .andReturnValue(1u);
+    mock().expectOneCall("is_left_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_front_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_right_wall_present").andReturnValue(true);
+    execute_move(MOVE_TURN_AROUND);
+
+    CHECK(is_left_wall_known_in_map());
+    CHECK(is_left_wall_present_in_map());
+
+    CHECK(is_front_wall_known_in_map());
+    CHECK(is_front_wall_present_in_map());
+
+    CHECK(is_right_wall_known_in_map());
+    CHECK(is_right_wall_present_in_map());
+}
+
 TEST(MazeSolverCommonTests, UpdateCurrentCellWallsFacingWestUpdatesMap)
 {
     initialize_4_by_4_maze();
 
-    mock().expectOneCall("rotate_counter_clockwise_90_deg");
     mock().expectOneCall("move_forward");
+    mock().expectOneCall("is_left_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_front_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_right_wall_present").andReturnValue(false);
+    execute_move(MOVE_FORWARD);
 
+    mock().expectOneCall("rotate_counter_clockwise_90_deg");
+    mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
+        .andReturnValue(1u);
+    mock().expectOneCall("is_left_wall_present").andReturnValue(false);
+    mock().expectOneCall("is_front_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_right_wall_present").andReturnValue(true);
     execute_move(MOVE_LEFT);
-
-    mock().expectOneCall("is_left_wall_present")
-          .andReturnValue(false);
-
-    mock().expectOneCall("is_front_wall_present")
-          .andReturnValue(true);
-
-    mock().expectOneCall("is_right_wall_present")
-          .andReturnValue(true);
-
-    update_current_cell_walls();
 
     CHECK(is_left_wall_known_in_map());
     CHECK_FALSE(is_left_wall_present_in_map());
@@ -580,19 +564,12 @@ TEST(MazeSolverCommonTests, UpdatingWallUpdatesNeighborCell)
 {
     initialize_4_by_4_maze();
 
-    mock().expectOneCall("is_left_wall_present")
-          .andReturnValue(true);
-
-    mock().expectOneCall("is_front_wall_present")
-          .andReturnValue(false);
-
-    mock().expectOneCall("is_right_wall_present")
-          .andReturnValue(true);
-
+    mock().expectOneCall("is_left_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_front_wall_present").andReturnValue(false);
+    mock().expectOneCall("is_right_wall_present").andReturnValue(true);
     update_current_cell_walls();
 
     CHECK(is_wall_known_at_coordinate({0u, 1u}, DIRECTION_SOUTH));
-
     CHECK_FALSE(is_wall_present_at_coordinate({0u, 1u}, DIRECTION_SOUTH));
 }
 
@@ -602,15 +579,9 @@ TEST(MazeSolverCommonTests, KnownWallsAreNotOverwritten)
 
     /* Start cell east wall initialized as present */
 
-    mock().expectOneCall("is_left_wall_present")
-          .andReturnValue(true);
-
-    mock().expectOneCall("is_front_wall_present")
-          .andReturnValue(false);
-
-    mock().expectOneCall("is_right_wall_present")
-          .andReturnValue(false);  /* attempt to clear east wall */
-
+    mock().expectOneCall("is_left_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_front_wall_present").andReturnValue(false);
+    mock().expectOneCall("is_right_wall_present").andReturnValue(false);  /* attempt to clear east wall */
     update_current_cell_walls();
 
     CHECK(is_wall_known_at_coordinate({0u, 0u}, DIRECTION_EAST));
@@ -689,28 +660,23 @@ TEST(MazeSolverCommonTests, EstimateReturnToStartTimeSecReturnsPathTime)
     reset_maze_solver_state();
 
     /* Open north wall of start cell */
-    mock().expectOneCall("is_left_wall_present").andReturnValue(true);
-    mock().expectOneCall("is_front_wall_present").andReturnValue(false);
-    mock().expectOneCall("is_right_wall_present").andReturnValue(true);
-
-    update_current_cell_walls();
-
     mock().expectOneCall("move_forward");
-    execute_move(MOVE_FORWARD);
-
-    /* Open east wall at (0,1) */
     mock().expectOneCall("is_left_wall_present").andReturnValue(true);
     mock().expectOneCall("is_front_wall_present").andReturnValue(true);
     mock().expectOneCall("is_right_wall_present").andReturnValue(false);
+    execute_move(MOVE_FORWARD);
 
-    update_current_cell_walls();
-
+    /* Open east wall at (0,1) */
     mock().expectOneCall("rotate_clockwise_90_deg");
-    mock().expectOneCall("move_forward");
+    mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
+        .andReturnValue(1u);
+    mock().expectOneCall("is_left_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_front_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_right_wall_present").andReturnValue(true);
     execute_move(MOVE_RIGHT);
 
-    /* to return, we need to turn around, move forward, turn right, move forward */
-    CHECK(estimate_return_to_start_time_sec() == 7u);
+    /* to return, we need to turn around, move forward, turn left, move forward */
+    LONGS_EQUAL(7u, estimate_return_to_start_time_sec());
 }
 
 TEST(MazeSolverCommonTests, EstimateReturnToStartTimeIsZeroWhenAlreadyAtStart)
@@ -736,21 +702,11 @@ TEST(MazeSolverCommonTests, EstimateBestPathToGoalTimeSecReturnsShortestKnownPat
     reset_maze_solver_state();
 
     /* Open north wall from start */
+    mock().expectOneCall("move_forward");
     mock().expectOneCall("is_left_wall_present").andReturnValue(true);
     mock().expectOneCall("is_front_wall_present").andReturnValue(false);
-    mock().expectOneCall("is_right_wall_present").andReturnValue(true);
-
-    update_current_cell_walls();
-
-    mock().expectOneCall("move_forward");
-    execute_move(MOVE_FORWARD);
-
-    /* Open east wall at (0,1) */
-    mock().expectOneCall("is_left_wall_present").andReturnValue(true);
-    mock().expectOneCall("is_front_wall_present").andReturnValue(true);
     mock().expectOneCall("is_right_wall_present").andReturnValue(false);
-
-    update_current_cell_walls();
+    execute_move(MOVE_FORWARD);
 
     /* shortest from start to a goal cell is move forward, turn right, move forward */
     CHECK(estimate_best_path_to_goal_time_sec() == 4u);
@@ -768,7 +724,9 @@ TEST(MazeSolverCommonTests, ExecuteMoveForwardMovesMouseNorthOneCell)
     initialize_4_by_4_maze();
 
     mock().expectOneCall("move_forward");
-
+    mock().expectOneCall("is_left_wall_present").andReturnValue(false);
+    mock().expectOneCall("is_front_wall_present").andReturnValue(false);
+    mock().expectOneCall("is_right_wall_present").andReturnValue(false);
     execute_move(MOVE_FORWARD);
 
     struct mouse mouse{get_mouse()};
@@ -783,7 +741,11 @@ TEST(MazeSolverCommonTests, ExecuteMoveLeftRotatesAndMovesMouse)
     initialize_4_by_4_maze();
 
     mock().expectOneCall("rotate_counter_clockwise_90_deg");
-    mock().expectOneCall("move_forward");
+    mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
+        .andReturnValue(1u);
+    mock().expectOneCall("is_left_wall_present").andReturnValue(false);
+    mock().expectOneCall("is_front_wall_present").andReturnValue(false);
+    mock().expectOneCall("is_right_wall_present").andReturnValue(false);
 
     execute_move(MOVE_LEFT);
 
@@ -799,7 +761,11 @@ TEST(MazeSolverCommonTests, ExecuteMoveRightRotatesAndMovesMouse)
     initialize_4_by_4_maze();
 
     mock().expectOneCall("rotate_clockwise_90_deg");
-    mock().expectOneCall("move_forward");
+    mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
+        .andReturnValue(1u);
+    mock().expectOneCall("is_left_wall_present").andReturnValue(false);
+    mock().expectOneCall("is_front_wall_present").andReturnValue(false);
+    mock().expectOneCall("is_right_wall_present").andReturnValue(false);
 
     execute_move(MOVE_RIGHT);
 
@@ -815,7 +781,11 @@ TEST(MazeSolverCommonTests, ExecuteMoveTurnAroundRotatesAndMovesMouse)
     initialize_4_by_4_maze();
 
     mock().expectOneCall("rotate_180_deg");
-    mock().expectOneCall("move_forward");
+    mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
+        .andReturnValue(1u);
+    mock().expectOneCall("is_left_wall_present").andReturnValue(false);
+    mock().expectOneCall("is_front_wall_present").andReturnValue(false);
+    mock().expectOneCall("is_right_wall_present").andReturnValue(false);
 
     execute_move(MOVE_TURN_AROUND);
 
@@ -831,22 +801,19 @@ TEST(MazeSolverCommonTests, ReturnToStartFollowsShortestPathBackToOrigin)
     initialize_4_by_4_maze();
 
     /* open north from start */
+    mock().expectOneCall("move_forward");
     mock().expectOneCall("is_left_wall_present").andReturnValue(true);
     mock().expectOneCall("is_front_wall_present").andReturnValue(false);
-    mock().expectOneCall("is_right_wall_present").andReturnValue(true);
-    update_current_cell_walls();
-
-    mock().expectOneCall("move_forward");
+    mock().expectOneCall("is_right_wall_present").andReturnValue(false);
     execute_move(MOVE_FORWARD);
 
     /* open east from (0,1) */
+    mock().expectOneCall("rotate_clockwise_90_deg");
+    mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
+        .andReturnValue(1u);
     mock().expectOneCall("is_left_wall_present").andReturnValue(true);
     mock().expectOneCall("is_front_wall_present").andReturnValue(true);
     mock().expectOneCall("is_right_wall_present").andReturnValue(false);
-    update_current_cell_walls();
-
-    mock().expectOneCall("rotate_clockwise_90_deg");
-    mock().expectOneCall("move_forward");
     execute_move(MOVE_RIGHT);
 
     /*
@@ -855,47 +822,56 @@ TEST(MazeSolverCommonTests, ReturnToStartFollowsShortestPathBackToOrigin)
      * (0,1,W) -> (0,0,S)
      */
     mock().expectOneCall("rotate_180_deg");
-    mock().expectOneCall("move_forward");
+    mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
+        .andReturnValue(1u);
+    mock().expectOneCall("is_left_wall_present").andReturnValue(false);
+    mock().expectOneCall("is_front_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_right_wall_present").andReturnValue(false);
 
     mock().expectOneCall("rotate_counter_clockwise_90_deg");
-    mock().expectOneCall("move_forward");
+    mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
+        .andReturnValue(1u);
+    mock().expectOneCall("is_left_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_front_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_right_wall_present").andReturnValue(true);
 
     return_to_start();
 
     struct mouse mouse{get_mouse()};
 
-    CHECK(mouse.coordinates.x == 0u);
-    CHECK(mouse.coordinates.y == 0u);
+    LONGS_EQUAL(0u, mouse.coordinates.x);
+    LONGS_EQUAL(0u, mouse.coordinates.y);
 }
 
 TEST(MazeSolverCommonTests, CalculateFastestPathStoresShortestPathToGoal)
 {
     initialize_4_by_4_maze();
 
-    mock().expectOneCall("is_left_wall_present").andReturnValue(true);
-    mock().expectOneCall("is_front_wall_present").andReturnValue(false);
-    mock().expectOneCall("is_right_wall_present").andReturnValue(true);
-    update_current_cell_walls();
-
     mock().expectOneCall("move_forward");
-    execute_move(MOVE_FORWARD);
-
     mock().expectOneCall("is_left_wall_present").andReturnValue(true);
     mock().expectOneCall("is_front_wall_present").andReturnValue(true);
     mock().expectOneCall("is_right_wall_present").andReturnValue(false);
-    update_current_cell_walls();
+    execute_move(MOVE_FORWARD);
+
+    mock().expectOneCall("rotate_clockwise_90_deg");
+    mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
+        .andReturnValue(1u);
+    mock().expectOneCall("is_left_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_front_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_right_wall_present").andReturnValue(true);
+    execute_move(MOVE_RIGHT);
 
     calculate_fastest_path();
 
     struct maze_solver_path path{get_fastest_path()};
 
-    CHECK(path.length > 0u);
+    LONGS_EQUAL(3u, path.length);
 
-    CHECK(path.cells[0].x == 0u);
-    CHECK(path.cells[0].y == 0u);
+    LONGS_EQUAL(0u, path.cells[0].x);
+    LONGS_EQUAL(0u, path.cells[0].y);
 
-    CHECK(path.cells[path.length - 1u].x == 1u);
-    CHECK(path.cells[path.length - 1u].y == 1u);
+    LONGS_EQUAL(1u, path.cells[path.length - 1u].x);
+    LONGS_EQUAL(1u, path.cells[path.length - 1u].y);
 }
 
 TEST(MazeSolverCommonTests, CalculateFastestPathStoresEmptyPathWhenGoalNotReachable)
@@ -913,33 +889,30 @@ TEST(MazeSolverCommonTests, ExecuteSpeedRunPathFollowsStoredPath)
 {
     initialize_4_by_4_maze();
 
-    mock().expectOneCall("is_left_wall_present").andReturnValue(true);
-    mock().expectOneCall("is_front_wall_present").andReturnValue(false);
-    mock().expectOneCall("is_right_wall_present").andReturnValue(true);
-    update_current_cell_walls();
-
     mock().expectOneCall("move_forward");
+    mock().ignoreOtherCalls();
     execute_move(MOVE_FORWARD);
 
-    mock().expectOneCall("is_left_wall_present").andReturnValue(true);
-    mock().expectOneCall("is_front_wall_present").andReturnValue(true);
-    mock().expectOneCall("is_right_wall_present").andReturnValue(false);
-    update_current_cell_walls();
+    mock().expectOneCall("rotate_clockwise_90_deg");
+    mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
+        .andReturnValue(1u);
+    mock().ignoreOtherCalls();
+    execute_move(MOVE_RIGHT);
 
     calculate_fastest_path();
 
     struct maze_solver_path path{get_fastest_path()};
 
-    CHECK(path.length == 3u);
+    LONGS_EQUAL(3u, path.length);
 
-    CHECK(path.cells[0].x == 0u);
-    CHECK(path.cells[0].y == 0u);
+    LONGS_EQUAL(0u, path.cells[0].x);
+    LONGS_EQUAL(0u, path.cells[0].y);
 
-    CHECK(path.cells[1].x == 0u);
-    CHECK(path.cells[1].y == 1u);
+    LONGS_EQUAL(0u, path.cells[1].x);
+    LONGS_EQUAL(1u, path.cells[1].y);
 
-    CHECK(path.cells[2].x == 1u);
-    CHECK(path.cells[2].y == 1u);
+    LONGS_EQUAL(1u, path.cells[2].x);
+    LONGS_EQUAL(1u, path.cells[2].y);
 
     mock().expectOneCall("get_current_global_time_sec")
         .andReturnValue(123u);
@@ -948,12 +921,14 @@ TEST(MazeSolverCommonTests, ExecuteSpeedRunPathFollowsStoredPath)
 
     mock().expectOneCall("move_forward");
     mock().expectOneCall("rotate_clockwise_90_deg");
-    mock().expectOneCall("move_forward");
+    mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
+        .andReturnValue(1u);
+    mock().ignoreOtherCalls();
 
     execute_speed_run_path();
 
     struct mouse mouse{get_mouse()};
 
-    CHECK(mouse.coordinates.x == 1u);
-    CHECK(mouse.coordinates.y == 1u);
+    LONGS_EQUAL(1u, mouse.coordinates.x);
+    LONGS_EQUAL(1u, mouse.coordinates.y);
 }

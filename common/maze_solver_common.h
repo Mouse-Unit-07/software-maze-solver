@@ -21,6 +21,7 @@ struct maze_solver_config {
 enum movement
 {
     MOVE_FORWARD,
+    MOVE_FORWARD_CONTINUOUS,
     MOVE_LEFT,
     MOVE_RIGHT,
     MOVE_TURN_AROUND
@@ -88,7 +89,6 @@ uint32_t get_maze_size(void);
 void set_goal_found(bool found);
 bool is_goal_cell(struct coordinates coord);
 bool is_mouse_at_goal(void);
-void update_current_cell_walls(void);
 bool is_cell_frontier(struct coordinates coord);
 struct coordinates get_current_coordinates(void);
 enum direction get_current_direction(void);
@@ -120,7 +120,10 @@ void execute_speed_run_path(void);
 void print_maze_solver_state(void);
 
 /*----------------------------------------------------------------------------*/
-/* accessors to private globals exposed for testing */
+/* helpers exposed for testing */
+void update_current_cell_walls(void);
+void update_corridor_cells(struct coordinates start, enum direction dir, uint32_t steps);
+
 struct mouse get_mouse(void);
 struct map_cell get_maze_cell(uint8_t x, uint8_t y);
 uint32_t get_solver_start_time_sec(void);
