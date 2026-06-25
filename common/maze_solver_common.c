@@ -21,6 +21,11 @@
 /*----------------------------------------------------------------------------*/
 static void reset_maze_solver_common(void);
 
+static enum direction get_left_direction(enum direction dir);
+static enum direction get_right_direction(enum direction dir);
+static enum direction get_opposite_direction(enum direction dir);
+static enum movement get_turn_required(enum direction from, enum direction to);
+
 static void update_wall_flags(struct map_cell *cell, uint8_t known_flag, uint8_t present_flag,
                               bool present);
 static void set_wall(struct coordinates coord, enum direction dir, bool present);
@@ -100,28 +105,9 @@ void reset_maze_solver_state(void)
     set_wall((struct coordinates){0u, 0u}, DIRECTION_EAST, true);
 }
 
-uint32_t get_maze_size(void)
-{
-    return maze_solver_cfg.maze_size;
-}
-
 void set_goal_found(bool found)
 {
     goal_found = found;
-}
-
-bool is_goal_cell(struct coordinates coord)
-{
-    uint32_t size = maze_solver_cfg.maze_size;
-    uint32_t center_low = (size - 1u) / 2u;
-    uint32_t center_high = size / 2u;
-
-    if ((size % 2u) != 0u) {
-        return (coord.x == center_low) && (coord.y == center_low);
-    }
-
-    return ((coord.x == center_low) || (coord.x == center_high))
-           && ((coord.y == center_low) || (coord.y == center_high));
 }
 
 bool is_mouse_at_goal(void)
@@ -138,29 +124,6 @@ bool is_mouse_at_goal(void)
            && ((mouse.coordinates.y == center_low) || (mouse.coordinates.y == center_high));
 }
 
-bool is_cell_frontier(struct coordinates coord)
-{
-    struct map_cell cell = maze[coord.y][coord.x];
-
-    if ((cell.flags & CELL_NORTH_WALL_KNOWN) == 0u) {
-        return true;
-    }
-
-    if ((cell.flags & CELL_EAST_WALL_KNOWN) == 0u) {
-        return true;
-    }
-
-    if ((cell.flags & CELL_SOUTH_WALL_KNOWN) == 0u) {
-        return true;
-    }
-
-    if ((cell.flags & CELL_WEST_WALL_KNOWN) == 0u) {
-        return true;
-    }
-
-    return false;
-}
-
 bool is_maze_fully_explored(void)
 {
     return !can_reach_unknown_cell((struct coordinates){0u, 0u});
@@ -173,178 +136,14 @@ bool can_reach_goal(void)
     return find_shortest_path_to_goal((struct coordinates){0u, 0u}, &path);
 }
 
-struct coordinates get_current_coordinates(void)
-{
-    return mouse.coordinates;
-}
-
-enum direction get_current_direction(void)
-{
-    return mouse.direction;
-}
-
-enum direction get_left_direction(enum direction dir)
-{
-    switch (dir) {
-        case DIRECTION_NORTH:
-            return DIRECTION_WEST;
-
-        case DIRECTION_EAST:
-            return DIRECTION_NORTH;
-
-        case DIRECTION_SOUTH:
-            return DIRECTION_EAST;
-
-        case DIRECTION_WEST:
-            return DIRECTION_SOUTH;
-
-        default:
-            return DIRECTION_NORTH;
-    }
-}
-
-enum direction get_right_direction(enum direction dir)
-{
-    switch (dir) {
-        case DIRECTION_NORTH:
-            return DIRECTION_EAST;
-
-        case DIRECTION_EAST:
-            return DIRECTION_SOUTH;
-
-        case DIRECTION_SOUTH:
-            return DIRECTION_WEST;
-
-        case DIRECTION_WEST:
-            return DIRECTION_NORTH;
-
-        default:
-            return DIRECTION_NORTH;
-    }
-}
-
-enum direction get_opposite_direction(enum direction dir)
-{
-    switch (dir) {
-        case DIRECTION_NORTH:
-            return DIRECTION_SOUTH;
-
-        case DIRECTION_EAST:
-            return DIRECTION_WEST;
-
-        case DIRECTION_SOUTH:
-            return DIRECTION_NORTH;
-
-        case DIRECTION_WEST:
-            return DIRECTION_EAST;
-
-        default:
-            return DIRECTION_NORTH;
-    }
-}
-
-enum movement get_turn_required(enum direction from, enum direction to)
-{
-    if (from == to) {
-        return MOVE_FORWARD;
-    }
-
-    if (get_left_direction(from) == to) {
-        return MOVE_LEFT;
-    }
-
-    if (get_right_direction(from) == to) {
-        return MOVE_RIGHT;
-    }
-
-    if (get_opposite_direction(from) == to) {
-        return MOVE_TURN_AROUND;
-    }
-
-    return MOVE_FORWARD;
-}
-
-bool is_wall_known_at_coordinate(struct coordinates coord, enum direction dir)
-{
-    uint8_t known_flag;
-    struct map_cell *cell = &maze[coord.y][coord.x];
-
-    switch (dir) {
-        case DIRECTION_NORTH:
-            known_flag = CELL_NORTH_WALL_KNOWN;
-            break;
-
-        case DIRECTION_EAST:
-            known_flag = CELL_EAST_WALL_KNOWN;
-            break;
-
-        case DIRECTION_SOUTH:
-            known_flag = CELL_SOUTH_WALL_KNOWN;
-            break;
-
-        case DIRECTION_WEST:
-            known_flag = CELL_WEST_WALL_KNOWN;
-            break;
-
-        default:
-            return false;
-    }
-
-    return (cell->flags & known_flag) != 0u;
-}
-
-bool is_wall_present_at_coordinate(struct coordinates coord, enum direction dir)
-{
-    uint8_t present_flag;
-    struct map_cell *cell = &maze[coord.y][coord.x];
-
-    switch (dir) {
-        case DIRECTION_NORTH:
-            present_flag = CELL_NORTH_WALL_PRESENT;
-            break;
-
-        case DIRECTION_EAST:
-            present_flag = CELL_EAST_WALL_PRESENT;
-            break;
-
-        case DIRECTION_SOUTH:
-            present_flag = CELL_SOUTH_WALL_PRESENT;
-            break;
-
-        case DIRECTION_WEST:
-            present_flag = CELL_WEST_WALL_PRESENT;
-            break;
-
-        default:
-            return false;
-    }
-
-    return (cell->flags & present_flag) != 0u;
-}
-
-bool is_front_wall_known_in_map(void)
-{
-    return is_wall_known_at_coordinate(mouse.coordinates, mouse.direction);
-}
-
 bool is_front_wall_present_in_map(void)
 {
     return is_wall_present_at_coordinate(mouse.coordinates, mouse.direction);
 }
 
-bool is_left_wall_known_in_map(void)
-{
-    return is_wall_known_at_coordinate(mouse.coordinates, get_left_direction(mouse.direction));
-}
-
 bool is_left_wall_present_in_map(void)
 {
     return is_wall_present_at_coordinate(mouse.coordinates, get_left_direction(mouse.direction));
-}
-
-bool is_right_wall_known_in_map(void)
-{
-    return is_wall_known_at_coordinate(mouse.coordinates, get_right_direction(mouse.direction));
 }
 
 bool is_right_wall_present_in_map(void)
@@ -534,6 +333,64 @@ void print_maze_solver_state(void)
 /*----------------------------------------------------------------------------*/
 /*                        Private Function Definitions                        */
 /*----------------------------------------------------------------------------*/
+bool is_wall_known_at_coordinate(struct coordinates coord, enum direction dir)
+{
+    uint8_t known_flag;
+    struct map_cell *cell = &maze[coord.y][coord.x];
+
+    switch (dir) {
+        case DIRECTION_NORTH:
+            known_flag = CELL_NORTH_WALL_KNOWN;
+            break;
+
+        case DIRECTION_EAST:
+            known_flag = CELL_EAST_WALL_KNOWN;
+            break;
+
+        case DIRECTION_SOUTH:
+            known_flag = CELL_SOUTH_WALL_KNOWN;
+            break;
+
+        case DIRECTION_WEST:
+            known_flag = CELL_WEST_WALL_KNOWN;
+            break;
+
+        default:
+            return false;
+    }
+
+    return (cell->flags & known_flag) != 0u;
+}
+
+bool is_wall_present_at_coordinate(struct coordinates coord, enum direction dir)
+{
+    uint8_t present_flag;
+    struct map_cell *cell = &maze[coord.y][coord.x];
+
+    switch (dir) {
+        case DIRECTION_NORTH:
+            present_flag = CELL_NORTH_WALL_PRESENT;
+            break;
+
+        case DIRECTION_EAST:
+            present_flag = CELL_EAST_WALL_PRESENT;
+            break;
+
+        case DIRECTION_SOUTH:
+            present_flag = CELL_SOUTH_WALL_PRESENT;
+            break;
+
+        case DIRECTION_WEST:
+            present_flag = CELL_WEST_WALL_PRESENT;
+            break;
+
+        default:
+            return false;
+    }
+
+    return (cell->flags & present_flag) != 0u;
+}
+
 void update_current_cell_walls(void)
 {
     switch (mouse.direction) {
@@ -618,6 +475,87 @@ static void reset_maze_solver_common(void)
     memset(&fastest_path, 0, sizeof(fastest_path));
     solver_start_time_sec = get_current_global_time_sec();
     goal_found = false;
+}
+
+static enum direction get_left_direction(enum direction dir)
+{
+    switch (dir) {
+        case DIRECTION_NORTH:
+            return DIRECTION_WEST;
+
+        case DIRECTION_EAST:
+            return DIRECTION_NORTH;
+
+        case DIRECTION_SOUTH:
+            return DIRECTION_EAST;
+
+        case DIRECTION_WEST:
+            return DIRECTION_SOUTH;
+
+        default:
+            return DIRECTION_NORTH;
+    }
+}
+
+static enum direction get_right_direction(enum direction dir)
+{
+    switch (dir) {
+        case DIRECTION_NORTH:
+            return DIRECTION_EAST;
+
+        case DIRECTION_EAST:
+            return DIRECTION_SOUTH;
+
+        case DIRECTION_SOUTH:
+            return DIRECTION_WEST;
+
+        case DIRECTION_WEST:
+            return DIRECTION_NORTH;
+
+        default:
+            return DIRECTION_NORTH;
+    }
+}
+
+static enum direction get_opposite_direction(enum direction dir)
+{
+    switch (dir) {
+        case DIRECTION_NORTH:
+            return DIRECTION_SOUTH;
+
+        case DIRECTION_EAST:
+            return DIRECTION_WEST;
+
+        case DIRECTION_SOUTH:
+            return DIRECTION_NORTH;
+
+        case DIRECTION_WEST:
+            return DIRECTION_EAST;
+
+        default:
+            return DIRECTION_NORTH;
+    }
+}
+
+static enum movement get_turn_required(enum direction from, enum direction to)
+{
+    if (from == to) {
+        return MOVE_FORWARD;
+    }
+
+    if (get_left_direction(from) == to) {
+        return MOVE_LEFT;
+    }
+
+    if (get_right_direction(from) == to) {
+        return MOVE_RIGHT;
+    }
+
+    if (get_opposite_direction(from) == to) {
+        return MOVE_TURN_AROUND;
+    }
+
+    return MOVE_FORWARD;
 }
 
 static void update_wall_flags(struct map_cell *cell, uint8_t known_flag, uint8_t present_flag,
