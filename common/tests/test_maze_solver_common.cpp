@@ -46,8 +46,7 @@ void initialize_4_by_4_maze(void)
 
     set_maze_solver_config(cfg);
 
-    mock().expectOneCall("get_current_global_time_sec")
-        .andReturnValue(123u);
+    mock().expectOneCall("get_current_global_time_sec");
 
     reset_maze_solver_state();
 }
@@ -139,7 +138,7 @@ TEST_GROUP(MazeSolverCommonTests)
 TEST(MazeSolverCommonTests, InitMazeSolverCommonResetsAllState)
 {
     mock().expectOneCall("get_current_global_time_sec")
-          .andReturnValue(123u);
+        .andReturnValue(123u);
 
     init_maze_solver_common();
 
@@ -180,7 +179,7 @@ TEST(MazeSolverCommonTests, DeinitMazeSolverCommonResetsAllState)
     set_goal_found(true);
 
     mock().expectOneCall("get_current_global_time_sec")
-          .andReturnValue(456u);
+        .andReturnValue(456u);
 
     deinit_maze_solver_common();
 
@@ -235,8 +234,7 @@ TEST(MazeSolverCommonTests, ResetMazeSolverStateResetsMouseAndGoalFound)
     set_maze_solver_config(cfg);
     set_goal_found(true);
 
-    mock().expectOneCall("get_current_global_time_sec")
-        .andReturnValue(123u);
+    mock().expectOneCall("get_current_global_time_sec");
 
     reset_maze_solver_state();
 
@@ -257,8 +255,7 @@ TEST(MazeSolverCommonTests, ResetMazeSolverStateInitializesMazeBoundaryWalls)
 
     set_maze_solver_config(cfg);
 
-    mock().expectOneCall("get_current_global_time_sec")
-        .andReturnValue(123u);
+    mock().expectOneCall("get_current_global_time_sec");
 
     reset_maze_solver_state();
 
@@ -341,8 +338,7 @@ TEST(MazeSolverCommonTests, IsMouseAtGoalReturnsFalseAtStartForOddMaze)
 
     set_maze_solver_config(cfg);
 
-    mock().expectOneCall("get_current_global_time_sec")
-        .andReturnValue(123u);
+    mock().expectOneCall("get_current_global_time_sec");
 
     reset_maze_solver_state();
 
@@ -357,8 +353,7 @@ TEST(MazeSolverCommonTests, IsMouseAtGoalReturnsTrueAtStartForTwoByTwoMaze)
 
     set_maze_solver_config(cfg);
 
-    mock().expectOneCall("get_current_global_time_sec")
-        .andReturnValue(123u);
+    mock().expectOneCall("get_current_global_time_sec");
 
     reset_maze_solver_state();
 
@@ -385,6 +380,81 @@ TEST(MazeSolverCommonTests, IsCellFrontierReturnsFalseWhenAllWallsAreKnown)
     update_current_cell_walls();
 
     CHECK_FALSE(is_cell_frontier({0u, 0u}));
+}
+
+TEST(MazeSolverCommonTests, IsMazeFullyExploredReturnsFalseWhenStartCellUnknown)
+{
+    initialize_4_by_4_maze();
+
+    CHECK_FALSE(is_maze_fully_explored());
+}
+
+TEST(MazeSolverCommonTests, IsMazeFullyExploredReturnsTrueWhenSingleCellMazeKnown)
+{
+    struct maze_solver_config cfg{};
+    cfg.maze_size = 1u;
+    cfg.total_timeout_sec = 100u;
+
+    set_maze_solver_config(cfg);
+    mock().expectOneCall("get_current_global_time_sec");
+    reset_maze_solver_state();
+
+    mock().expectOneCall("is_left_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_front_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_right_wall_present").andReturnValue(true);
+    update_current_cell_walls();
+
+    CHECK_TRUE(is_maze_fully_explored());
+}
+
+TEST(MazeSolverCommonTests, IsMazeFullyExploredReturnsFalseWhenReachableUnknownCellExists)
+{
+    initialize_4_by_4_maze();
+
+    mock().expectOneCall("is_left_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_front_wall_present").andReturnValue(false);
+    mock().expectOneCall("is_right_wall_present").andReturnValue(true);
+    update_current_cell_walls();
+
+    CHECK_FALSE(is_maze_fully_explored());
+}
+
+TEST(MazeSolverCommonTests, IsMazeFullyExploredReturnsTrueWhenUnknownCellsAreNotReachable)
+{
+    initialize_4_by_4_maze();
+
+    mock().expectOneCall("move_forward");
+    mock().expectOneCall("is_left_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_front_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_right_wall_present").andReturnValue(true);
+    execute_move(MOVE_FORWARD);
+
+    CHECK_TRUE(is_maze_fully_explored());
+}
+
+TEST(MazeSolverCommonTests, CanReachGoalReturnsTrueWhenGoalReachableAndFalseOtherwise)
+{
+    initialize_4_by_4_maze();
+
+    CHECK_FALSE(can_reach_goal());
+
+    /* closed east from (0,1) */
+    mock().expectOneCall("move_forward");
+    mock().expectOneCall("is_left_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_front_wall_present").andReturnValue(false);
+    mock().expectOneCall("is_right_wall_present").andReturnValue(true);
+    execute_move(MOVE_FORWARD);
+
+    CHECK_FALSE(can_reach_goal());
+
+    /* open east from (0,2) */
+    mock().expectOneCall("move_forward");
+    mock().expectOneCall("is_left_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_front_wall_present").andReturnValue(true);
+    mock().expectOneCall("is_right_wall_present").andReturnValue(false);
+    execute_move(MOVE_FORWARD);
+
+    CHECK_TRUE(can_reach_goal());
 }
 
 TEST(MazeSolverCommonTests, GetCurrentCoordinatesAndDirectionReturnMouseState)
@@ -654,8 +724,7 @@ TEST(MazeSolverCommonTests, EstimateReturnToStartTimeSecReturnsPathTime)
 
     set_maze_solver_config(cfg);
 
-    mock().expectOneCall("get_current_global_time_sec")
-        .andReturnValue(123u);
+    mock().expectOneCall("get_current_global_time_sec");
 
     reset_maze_solver_state();
 
@@ -696,8 +765,7 @@ TEST(MazeSolverCommonTests, EstimateBestPathToGoalTimeSecReturnsShortestKnownPat
 
     set_maze_solver_config(cfg);
 
-    mock().expectOneCall("get_current_global_time_sec")
-        .andReturnValue(123u);
+    mock().expectOneCall("get_current_global_time_sec");
 
     reset_maze_solver_state();
 
@@ -822,18 +890,12 @@ TEST(MazeSolverCommonTests, ReturnToStartFollowsShortestPathBackToOrigin)
      * (0,1,W) -> (0,0,S)
      */
     mock().expectOneCall("rotate_180_deg");
-    mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
+    mock().expectOneCall("move_forward")
         .andReturnValue(1u);
-    mock().expectOneCall("is_left_wall_present").andReturnValue(false);
-    mock().expectOneCall("is_front_wall_present").andReturnValue(true);
-    mock().expectOneCall("is_right_wall_present").andReturnValue(false);
 
     mock().expectOneCall("rotate_counter_clockwise_90_deg");
-    mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
+    mock().expectOneCall("move_forward")
         .andReturnValue(1u);
-    mock().expectOneCall("is_left_wall_present").andReturnValue(true);
-    mock().expectOneCall("is_front_wall_present").andReturnValue(true);
-    mock().expectOneCall("is_right_wall_present").andReturnValue(true);
 
     return_to_start();
 
@@ -914,14 +976,13 @@ TEST(MazeSolverCommonTests, ExecuteSpeedRunPathFollowsStoredPath)
     LONGS_EQUAL(1u, path.cells[2].x);
     LONGS_EQUAL(1u, path.cells[2].y);
 
-    mock().expectOneCall("get_current_global_time_sec")
-        .andReturnValue(123u);
+    mock().expectOneCall("get_current_global_time_sec");
 
     reset_maze_solver_state();
 
     mock().expectOneCall("move_forward");
     mock().expectOneCall("rotate_clockwise_90_deg");
-    mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
+    mock().expectOneCall("move_forward")
         .andReturnValue(1u);
     mock().ignoreOtherCalls();
 
@@ -931,4 +992,17 @@ TEST(MazeSolverCommonTests, ExecuteSpeedRunPathFollowsStoredPath)
 
     LONGS_EQUAL(1u, mouse.coordinates.x);
     LONGS_EQUAL(1u, mouse.coordinates.y);
+}
+
+TEST(MazeSolverCommonTests, ExecuteSpeedRunPathDoesNothingWhenPathEmpty)
+{
+    initialize_4_by_4_maze();
+
+    execute_speed_run_path();
+
+    struct mouse mouse{get_mouse()};
+
+    LONGS_EQUAL(0u, mouse.coordinates.x);
+    LONGS_EQUAL(0u, mouse.coordinates.y);
+    LONGS_EQUAL(DIRECTION_NORTH, mouse.direction);
 }
