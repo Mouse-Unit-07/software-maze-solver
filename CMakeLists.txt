@@ -17,13 +17,11 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(mouse_driver)
 
 add_subdirectory(common)
-add_subdirectory(partial_flood_fill)
 add_subdirectory(wall_follower)
 
 if(TARGET_WINDOWS AND SUPPORTS_WINDOWS)
     if(ENABLE_MAZE_SOLVER_TESTS)
         add_subdirectory(common/tests)
-        add_subdirectory(partial_flood_fill/tests)
         add_subdirectory(wall_follower/tests)
     endif()
 endif()
@@ -32,6 +30,5 @@ add_library(maze_solver_lib INTERFACE)
 
 target_link_libraries(maze_solver_lib INTERFACE
     maze_solver_common_lib
-    partial_flood_fill_lib
     wall_follower_lib
 )

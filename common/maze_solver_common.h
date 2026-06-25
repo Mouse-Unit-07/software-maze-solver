@@ -85,28 +85,13 @@ void set_maze_solver_config(struct maze_solver_config cfg);
 struct maze_solver_config get_maze_solver_config(void);
 
 void reset_maze_solver_state(void);
-uint32_t get_maze_size(void);
 void set_goal_found(bool found);
-bool is_goal_cell(struct coordinates coord);
 bool is_mouse_at_goal(void);
-bool is_cell_frontier(struct coordinates coord);
 bool is_maze_fully_explored(void);
 bool can_reach_goal(void);
 
-struct coordinates get_current_coordinates(void);
-enum direction get_current_direction(void);
-enum direction get_left_direction(enum direction dir);
-enum direction get_right_direction(enum direction dir);
-enum direction get_opposite_direction(enum direction dir);
-enum movement get_turn_required(enum direction from, enum direction to);
-
-bool is_wall_known_at_coordinate(struct coordinates coord, enum direction dir);
-bool is_wall_present_at_coordinate(struct coordinates coord, enum direction dir);
-bool is_front_wall_known_in_map(void);
 bool is_front_wall_present_in_map(void);
-bool is_left_wall_known_in_map(void);
 bool is_left_wall_present_in_map(void);
-bool is_right_wall_known_in_map(void);
 bool is_right_wall_present_in_map(void);
 
 bool is_solver_timeout(void);
@@ -123,6 +108,8 @@ void print_maze_solver_state(void);
 
 /*----------------------------------------------------------------------------*/
 /* helpers exposed for testing */
+bool is_wall_known_at_coordinate(struct coordinates coord, enum direction dir);
+bool is_wall_present_at_coordinate(struct coordinates coord, enum direction dir);
 void update_current_cell_walls(void);
 void update_corridor_cells(struct coordinates start, enum direction dir, uint32_t steps);
 
