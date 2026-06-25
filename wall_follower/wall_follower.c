@@ -30,7 +30,7 @@ void run_wall_follower(enum wall_follower_mode mode, bool enable_print)
 {
     reset_maze_solver_state();
 
-    while (!is_solver_timeout() && !is_mouse_at_goal()) {
+    while (!is_solver_timeout() && !is_mouse_at_goal() && !(is_maze_fully_explored() && !can_reach_goal())) {
         execute_move(determine_wall_follower_move(mode));
 
         if (enable_print) {
@@ -38,12 +38,12 @@ void run_wall_follower(enum wall_follower_mode mode, bool enable_print)
         }
     }
 
-    if (is_solver_timeout()) {
+    if (is_solver_timeout() || (is_maze_fully_explored() && !can_reach_goal())) {
         return;
     }
     set_goal_found(true);
 
-    while (!is_solver_timeout()) {
+    while (!is_solver_timeout() && !is_maze_fully_explored()) {
         uint32_t estimated_return_time_sec = estimate_return_to_start_time_sec();
         uint32_t estimated_speed_run_time_sec = estimate_best_path_to_goal_time_sec();
         uint32_t remaining_time_sec = get_solver_remaining_time_sec();

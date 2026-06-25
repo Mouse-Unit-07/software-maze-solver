@@ -49,6 +49,18 @@ bool is_mouse_at_goal(void)
         .returnBoolValue();
 }
 
+bool is_maze_fully_explored(void)
+{
+    return mock().actualCall("is_maze_fully_explored")
+        .returnBoolValue();
+}
+
+bool can_reach_goal(void)
+{
+    return mock().actualCall("can_reach_goal")
+        .returnBoolValue();
+}
+
 void execute_move(enum movement move)
 {
     mock().actualCall("execute_move")
@@ -143,7 +155,7 @@ TEST_GROUP(WallFollowerTests)
 TEST(WallFollowerTests, LeftFollowerPrefersLeft)
 {
     mock().expectOneCall("is_left_wall_present_in_map")
-          .andReturnValue(false);
+        .andReturnValue(false);
 
     CHECK(determine_wall_follower_move(WALL_FOLLOWER_LEFT) == MOVE_LEFT);
 }
@@ -151,10 +163,10 @@ TEST(WallFollowerTests, LeftFollowerPrefersLeft)
 TEST(WallFollowerTests, LeftFollowerMovesForwardWhenLeftBlocked)
 {
     mock().expectOneCall("is_left_wall_present_in_map")
-          .andReturnValue(true);
+        .andReturnValue(true);
 
     mock().expectOneCall("is_front_wall_present_in_map")
-          .andReturnValue(false);
+        .andReturnValue(false);
 
     CHECK(determine_wall_follower_move(WALL_FOLLOWER_LEFT) == MOVE_FORWARD_CONTINUOUS);
 }
@@ -162,13 +174,13 @@ TEST(WallFollowerTests, LeftFollowerMovesForwardWhenLeftBlocked)
 TEST(WallFollowerTests, LeftFollowerTurnsRightWhenLeftAndFrontBlocked)
 {
     mock().expectOneCall("is_left_wall_present_in_map")
-          .andReturnValue(true);
+        .andReturnValue(true);
 
     mock().expectOneCall("is_front_wall_present_in_map")
-          .andReturnValue(true);
+        .andReturnValue(true);
 
     mock().expectOneCall("is_right_wall_present_in_map")
-          .andReturnValue(false);
+        .andReturnValue(false);
 
     CHECK(determine_wall_follower_move(WALL_FOLLOWER_LEFT) == MOVE_RIGHT);
 }
@@ -176,13 +188,13 @@ TEST(WallFollowerTests, LeftFollowerTurnsRightWhenLeftAndFrontBlocked)
 TEST(WallFollowerTests, LeftFollowerTurnsAroundWhenTrapped)
 {
     mock().expectOneCall("is_left_wall_present_in_map")
-          .andReturnValue(true);
+        .andReturnValue(true);
 
     mock().expectOneCall("is_front_wall_present_in_map")
-          .andReturnValue(true);
+        .andReturnValue(true);
 
     mock().expectOneCall("is_right_wall_present_in_map")
-          .andReturnValue(true);
+        .andReturnValue(true);
 
     CHECK(determine_wall_follower_move(WALL_FOLLOWER_LEFT) == MOVE_TURN_AROUND);
 }
@@ -192,10 +204,33 @@ TEST(WallFollowerTests, RunWallFollowerReturnsImmediatelyOnTimeout)
     mock().expectOneCall("reset_maze_solver_state");
 
     mock().expectOneCall("is_solver_timeout")
-          .andReturnValue(true);
+        .andReturnValue(true);
 
     mock().expectOneCall("is_solver_timeout")
-          .andReturnValue(true);
+        .andReturnValue(true);
+
+    run_wall_follower(WALL_FOLLOWER_LEFT, false);
+}
+
+TEST(WallFollowerTests, RunWallFollowerReturnsImmediatelyOnUnsolvableMaze)
+{
+    mock().expectOneCall("reset_maze_solver_state");
+
+    mock().expectOneCall("is_solver_timeout")
+        .andReturnValue(false);
+    mock().expectOneCall("is_mouse_at_goal")
+        .andReturnValue(false);
+    mock().expectOneCall("is_maze_fully_explored")
+        .andReturnValue(true);
+    mock().expectOneCall("can_reach_goal")
+        .andReturnValue(false);
+
+    mock().expectOneCall("is_solver_timeout")
+        .andReturnValue(false);
+    mock().expectOneCall("is_maze_fully_explored")
+        .andReturnValue(true);
+    mock().expectOneCall("can_reach_goal")
+        .andReturnValue(false);
 
     run_wall_follower(WALL_FOLLOWER_LEFT, false);
 }
@@ -205,19 +240,24 @@ TEST(WallFollowerTests, RunWallFollowerExecutesSpeedRunWhenGoalAlreadyReached)
     mock().expectOneCall("reset_maze_solver_state");
 
     mock().expectOneCall("is_solver_timeout")
-          .andReturnValue(false);
+        .andReturnValue(false);
 
     mock().expectOneCall("is_mouse_at_goal")
-          .andReturnValue(true);
+        .andReturnValue(true);
 
     mock().expectOneCall("is_solver_timeout")
-          .andReturnValue(false);
+        .andReturnValue(false);
+
+    mock().expectOneCall("is_maze_fully_explored")
+        .andReturnValue(true);
+    mock().expectOneCall("can_reach_goal")
+        .andReturnValue(true);
 
     mock().expectOneCall("set_goal_found")
-          .withBoolParameter("found", true);
+        .withBoolParameter("found", true);
 
     mock().expectOneCall("is_solver_timeout")
-          .andReturnValue(true);
+        .andReturnValue(true);
 
     mock().expectOneCall("return_to_start");
 
@@ -233,31 +273,34 @@ TEST(WallFollowerTests, RunWallFollowerExploresMaze)
     mock().expectOneCall("reset_maze_solver_state");
 
     mock().expectOneCall("is_solver_timeout")
-          .andReturnValue(false);
-
+        .andReturnValue(false);
     mock().expectOneCall("is_mouse_at_goal")
-          .andReturnValue(false);
+        .andReturnValue(false);
+    mock().expectOneCall("is_maze_fully_explored")
+        .andReturnValue(false);
 
     mock().expectOneCall("is_left_wall_present_in_map")
-          .andReturnValue(false);
-
+        .andReturnValue(false);
     mock().expectOneCall("execute_move")
-          .withUnsignedIntParameter("move", MOVE_LEFT);
+        .withUnsignedIntParameter("move", MOVE_LEFT);
 
     mock().expectOneCall("is_solver_timeout")
-          .andReturnValue(false);
-
+        .andReturnValue(false);
     mock().expectOneCall("is_mouse_at_goal")
-          .andReturnValue(true);
+        .andReturnValue(true);
 
     mock().expectOneCall("is_solver_timeout")
-          .andReturnValue(false);
+        .andReturnValue(false);
+    mock().expectOneCall("is_maze_fully_explored")
+        .andReturnValue(true);
+    mock().expectOneCall("can_reach_goal")
+        .andReturnValue(true);
 
     mock().expectOneCall("set_goal_found")
-          .withBoolParameter("found", true);
+        .withBoolParameter("found", true);
 
     mock().expectOneCall("is_solver_timeout")
-          .andReturnValue(true);
+        .andReturnValue(true);
 
     mock().expectOneCall("return_to_start");
     mock().expectOneCall("calculate_fastest_path");
@@ -271,42 +314,60 @@ TEST(WallFollowerTests, RunWallFollowerPrintsWhenEnabled)
     mock().expectOneCall("reset_maze_solver_state");
 
     mock().expectOneCall("is_solver_timeout")
-          .andReturnValue(false);
-
+        .andReturnValue(false);
     mock().expectOneCall("is_mouse_at_goal")
-          .andReturnValue(false);
+        .andReturnValue(false);
+    mock().expectOneCall("is_maze_fully_explored")
+        .andReturnValue(false);
 
     mock().expectOneCall("is_left_wall_present_in_map")
-          .andReturnValue(false);
-
+        .andReturnValue(false);
     mock().expectOneCall("execute_move")
-          .withUnsignedIntParameter("move", MOVE_LEFT);
+        .withUnsignedIntParameter("move", MOVE_LEFT);
 
     mock().expectOneCall("print_maze_solver_state");
 
     mock().expectOneCall("is_solver_timeout")
-          .andReturnValue(false);
-
+        .andReturnValue(false);
     mock().expectOneCall("is_mouse_at_goal")
-          .andReturnValue(true);
+        .andReturnValue(true);
 
     mock().expectOneCall("is_solver_timeout")
-          .andReturnValue(false);
+        .andReturnValue(false);
+    mock().expectOneCall("is_maze_fully_explored")
+        .andReturnValue(false);
 
     mock().expectOneCall("set_goal_found")
-          .withBoolParameter("found", true);
+        .withBoolParameter("found", true);
 
     mock().expectOneCall("is_solver_timeout")
-          .andReturnValue(true);
+        .andReturnValue(false);
+    mock().expectOneCall("is_maze_fully_explored")
+        .andReturnValue(false);
+
+    mock().expectOneCall("estimate_return_to_start_time_sec")
+        .andReturnValue(1);
+    mock().expectOneCall("estimate_best_path_to_goal_time_sec")
+        .andReturnValue(1);
+    mock().expectOneCall("get_solver_remaining_time_sec")
+        .andReturnValue(10);
+
+    mock().expectOneCall("is_left_wall_present_in_map")
+        .andReturnValue(false);
+    mock().expectOneCall("execute_move")
+        .withUnsignedIntParameter("move", MOVE_LEFT);
+
+    mock().expectOneCall("print_maze_solver_state");
+
+    mock().expectOneCall("is_solver_timeout")
+        .andReturnValue(true);
 
     mock().expectOneCall("return_to_start");
-
     mock().expectOneCall("print_maze_solver_state");
 
     mock().expectOneCall("calculate_fastest_path");
 
     mock().expectOneCall("execute_speed_run_path");
-
     mock().expectOneCall("print_maze_solver_state");
 
     run_wall_follower(WALL_FOLLOWER_LEFT, true);

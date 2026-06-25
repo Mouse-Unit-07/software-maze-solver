@@ -90,9 +90,11 @@ void set_goal_found(bool found);
 bool is_goal_cell(struct coordinates coord);
 bool is_mouse_at_goal(void);
 bool is_cell_frontier(struct coordinates coord);
+bool is_maze_fully_explored(void);
+bool can_reach_goal(void);
+
 struct coordinates get_current_coordinates(void);
 enum direction get_current_direction(void);
-
 enum direction get_left_direction(enum direction dir);
 enum direction get_right_direction(enum direction dir);
 enum direction get_opposite_direction(enum direction dir);

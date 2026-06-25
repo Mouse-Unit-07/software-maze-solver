@@ -26,12 +26,15 @@ static void update_wall_flags(struct map_cell *cell, uint8_t known_flag, uint8_t
 static void set_wall(struct coordinates coord, enum direction dir, bool present);
 static void move_mouse_to_next_cell(void);
 static bool can_move(struct coordinates coord, enum direction dir);
+static bool is_cell_fully_known(struct coordinates coord);
+static bool can_reach_unknown_cell(struct coordinates start);
 
 static uint32_t estimate_path_time_sec(const struct maze_solver_path *path,
                                        enum direction start_dir);
 static bool find_shortest_path_to_goal(struct coordinates start, struct maze_solver_path *path);
 static bool find_shortest_path(struct coordinates start, struct coordinates target,
                                struct maze_solver_path *path);
+static void execute_path_move(enum movement move);
 static void follow_path(const struct maze_solver_path *path);
 
 static const char direction_to_char(enum direction dir);
@@ -156,6 +159,18 @@ bool is_cell_frontier(struct coordinates coord)
     }
 
     return false;
+}
+
+bool is_maze_fully_explored(void)
+{
+    return !can_reach_unknown_cell((struct coordinates){0u, 0u});
+}
+
+bool can_reach_goal(void)
+{
+    struct maze_solver_path path = {0u};
+
+    return find_shortest_path_to_goal((struct coordinates){0u, 0u}, &path);
 }
 
 struct coordinates get_current_coordinates(void)
@@ -690,6 +705,67 @@ static void move_mouse_to_next_cell(void)
             break;
     }
 }
+static bool is_cell_fully_known(struct coordinates coord)
+{
+    struct map_cell *cell = &maze[coord.y][coord.x];
+
+    uint8_t known_mask =
+        CELL_NORTH_WALL_KNOWN | CELL_EAST_WALL_KNOWN | CELL_SOUTH_WALL_KNOWN | CELL_WEST_WALL_KNOWN;
+
+    return (cell->flags & known_mask) == known_mask;
+}
+
+static bool can_reach_unknown_cell(struct coordinates start)
+{
+    bool visited[MAX_DIMENSION_CELL_COUNT][MAX_DIMENSION_CELL_COUNT] = {{0}};
+
+    struct coordinates queue[MAX_PATH_LENGTH];
+
+    uint32_t head = 0u;
+    uint32_t tail = 0u;
+
+    uint32_t size = maze_solver_cfg.maze_size;
+
+    queue[tail++] = start;
+    visited[start.y][start.x] = true;
+
+    while (head < tail) {
+        struct coordinates curr = queue[head++];
+
+        if (!is_cell_fully_known(curr)) {
+            return true;
+        }
+
+        static const int8_t dx[4] = {0, 1, 0, -1};
+        static const int8_t dy[4] = {1, 0, -1, 0};
+
+        for (uint32_t dir = 0u; dir < 4u; dir++) {
+            if (!is_wall_known_at_coordinate(curr, (enum direction)dir)) {
+                continue;
+            }
+
+            if (is_wall_present_at_coordinate(curr, (enum direction)dir)) {
+                continue;
+            }
+
+            int32_t nx = (int32_t)curr.x + dx[dir];
+            int32_t ny = (int32_t)curr.y + dy[dir];
+
+            if ((nx < 0) || (ny < 0) || (nx >= (int32_t)size) || (ny >= (int32_t)size)) {
+                continue;
+            }
+
+            if (visited[ny][nx]) {
+                continue;
+            }
+
+            visited[ny][nx] = true;
+            queue[tail++] = (struct coordinates){(uint8_t)nx, (uint8_t)ny};
+        }
+    }
+
+    return false;
+}
 
 static bool can_move(struct coordinates coord, enum direction dir)
 {
@@ -877,6 +953,43 @@ static bool find_shortest_path_to_goal(struct coordinates start, struct maze_sol
     return found;
 }
 
+static void execute_path_move(enum movement move)
+{
+    switch (move) {
+        case MOVE_FORWARD:
+            move_forward();
+            move_mouse_to_next_cell();
+            break;
+
+        case MOVE_LEFT:
+            rotate_counter_clockwise_90_deg();
+            mouse.direction = get_left_direction(mouse.direction);
+
+            move_forward();
+            move_mouse_to_next_cell();
+            break;
+
+        case MOVE_RIGHT:
+            rotate_clockwise_90_deg();
+            mouse.direction = get_right_direction(mouse.direction);
+
+            move_forward();
+            move_mouse_to_next_cell();
+            break;
+
+        case MOVE_TURN_AROUND:
+            rotate_180_deg();
+            mouse.direction = get_opposite_direction(mouse.direction);
+
+            move_forward();
+            move_mouse_to_next_cell();
+            break;
+
+        default:
+            break;
+    }
+}
+
 static void follow_path(const struct maze_solver_path *path)
 {
     for (uint32_t i = 1u; i < path->length; i++) {
@@ -898,7 +1011,7 @@ static void follow_path(const struct maze_solver_path *path)
             target_dir = DIRECTION_WEST;
         }
 
-        execute_move(get_turn_required(mouse.direction, target_dir));
+        execute_path_move(get_turn_required(mouse.direction, target_dir));
     }
 }
 
