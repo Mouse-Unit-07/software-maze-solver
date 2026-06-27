@@ -30,7 +30,8 @@ void run_wall_follower(enum wall_follower_mode mode, bool enable_print)
 {
     reset_maze_solver_state();
 
-    while (!is_solver_timeout() && !is_mouse_at_goal() && !(is_maze_fully_explored() && !can_reach_goal())) {
+    while (!is_solver_timeout() && !is_mouse_at_goal()
+           && !(is_maze_fully_explored() && !can_reach_goal())) {
         execute_move(determine_wall_follower_move(mode));
 
         if (enable_print) {

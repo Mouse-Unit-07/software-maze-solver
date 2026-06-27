@@ -59,14 +59,12 @@ extern "C"
 
 uint32_t get_current_global_time_sec(void)
 {
-    return mock().actualCall("get_current_global_time_sec")
-        .returnUnsignedIntValue();
+    return mock().actualCall("get_current_global_time_sec").returnUnsignedIntValue();
 }
 
 uint32_t get_elapsed_global_time_sec(uint32_t start_time_sec)
 {
-    return mock().actualCall("get_elapsed_global_time_sec")
-        .returnUnsignedIntValue();
+    return mock().actualCall("get_elapsed_global_time_sec").returnUnsignedIntValue();
 }
 
 void move_forward(void)
@@ -76,8 +74,9 @@ void move_forward(void)
 
 uint32_t move_forward_until_turn_or_intersection_and_return_steps(void)
 {
-    return mock().actualCall("move_forward_until_turn_or_intersection_and_return_steps")
-        .returnUnsignedIntValue();
+    return mock()
+            .actualCall("move_forward_until_turn_or_intersection_and_return_steps")
+            .returnUnsignedIntValue();
 }
 
 void rotate_clockwise_90_deg(void)
@@ -97,20 +96,17 @@ void rotate_180_deg(void)
 
 bool is_left_wall_present(void)
 {
-    return mock().actualCall("is_left_wall_present")
-        .returnBoolValue();
+    return mock().actualCall("is_left_wall_present").returnBoolValue();
 }
 
 bool is_right_wall_present(void)
 {
-    return mock().actualCall("is_right_wall_present")
-        .returnBoolValue();
+    return mock().actualCall("is_right_wall_present").returnBoolValue();
 }
 
 bool is_front_wall_present(void)
 {
-    return mock().actualCall("is_front_wall_present")
-        .returnBoolValue();
+    return mock().actualCall("is_front_wall_present").returnBoolValue();
 }
 
 }
@@ -137,26 +133,25 @@ TEST_GROUP(MazeSolverCommonTests)
 /*============================================================================*/
 TEST(MazeSolverCommonTests, InitMazeSolverCommonResetsAllState)
 {
-    mock().expectOneCall("get_current_global_time_sec")
-        .andReturnValue(123u);
+    mock().expectOneCall("get_current_global_time_sec").andReturnValue(123u);
 
     init_maze_solver_common();
 
     struct maze_solver_config cfg{get_maze_solver_config()};
 
-    CHECK(cfg.maze_size == 0u);
-    CHECK(cfg.total_timeout_sec == 0u);
-    CHECK(cfg.move_forward_time_sec == 0u);
-    CHECK(cfg.rotate_90_deg_time_sec == 0u);
-    CHECK(cfg.rotate_180_deg_time_sec == 0u);
+    LONGS_EQUAL(0u, cfg.maze_size);
+    LONGS_EQUAL(0u, cfg.total_timeout_sec);
+    LONGS_EQUAL(0u, cfg.move_forward_time_sec);
+    LONGS_EQUAL(0u, cfg.rotate_90_deg_time_sec);
+    LONGS_EQUAL(0u, cfg.rotate_180_deg_time_sec);
 
     struct mouse mouse{get_mouse()};
 
-    CHECK(mouse.coordinates.x == 0u);
-    CHECK(mouse.coordinates.y == 0u);
-    CHECK(mouse.direction == 0u);
+    LONGS_EQUAL(0u, mouse.coordinates.x);
+    LONGS_EQUAL(0u, mouse.coordinates.y);
+    LONGS_EQUAL(0u, mouse.direction);
 
-    CHECK(get_solver_start_time_sec() == 123u);
+    LONGS_EQUAL(123u, get_solver_start_time_sec());
 
     CHECK_FALSE(get_goal_found());
 
@@ -166,7 +161,7 @@ TEST(MazeSolverCommonTests, InitMazeSolverCommonResetsAllState)
 
     for (uint32_t y{0u}; y < MAX_DIMENSION_CELL_COUNT; y++) {
         for (uint32_t x{0u}; x < MAX_DIMENSION_CELL_COUNT; x++) {
-            CHECK(get_maze_cell(x, y).flags == 0u);
+            LONGS_EQUAL(0u, get_maze_cell(x, y).flags);
         }
     }
 }
@@ -178,36 +173,35 @@ TEST(MazeSolverCommonTests, DeinitMazeSolverCommonResetsAllState)
     set_maze_solver_config(cfg);
     set_goal_found(true);
 
-    mock().expectOneCall("get_current_global_time_sec")
-        .andReturnValue(456u);
+    mock().expectOneCall("get_current_global_time_sec").andReturnValue(456u);
 
     deinit_maze_solver_common();
 
     cfg = get_maze_solver_config();
 
-    CHECK(cfg.maze_size == 0u);
-    CHECK(cfg.total_timeout_sec == 0u);
-    CHECK(cfg.move_forward_time_sec == 0u);
-    CHECK(cfg.rotate_90_deg_time_sec == 0u);
-    CHECK(cfg.rotate_180_deg_time_sec == 0u);
+    LONGS_EQUAL(0u, cfg.maze_size);
+    LONGS_EQUAL(0u, cfg.total_timeout_sec);
+    LONGS_EQUAL(0u, cfg.move_forward_time_sec);
+    LONGS_EQUAL(0u, cfg.rotate_90_deg_time_sec);
+    LONGS_EQUAL(0u, cfg.rotate_180_deg_time_sec);
 
     struct mouse mouse{get_mouse()};
 
-    CHECK(mouse.coordinates.x == 0u);
-    CHECK(mouse.coordinates.y == 0u);
-    CHECK(mouse.direction == 0u);
+    LONGS_EQUAL(0u, mouse.coordinates.x);
+    LONGS_EQUAL(0u, mouse.coordinates.y);
+    LONGS_EQUAL(0u, mouse.direction);
 
-    CHECK(get_solver_start_time_sec() == 456u);
+    LONGS_EQUAL(456u, get_solver_start_time_sec());
 
     CHECK_FALSE(get_goal_found());
 
     struct maze_solver_path path{get_fastest_path()};
 
-    CHECK(path.length == 0u);
+    LONGS_EQUAL(0u, path.length);
 
     for (uint32_t y{0u}; y < MAX_DIMENSION_CELL_COUNT; y++) {
         for (uint32_t x{0u}; x < MAX_DIMENSION_CELL_COUNT; x++) {
-            CHECK(get_maze_cell(x, y).flags == 0u);
+            LONGS_EQUAL(0u, get_maze_cell(x, y).flags);
         }
     }
 }
@@ -220,11 +214,11 @@ TEST(MazeSolverCommonTests, SetMazeSolverConfigStoresConfiguration)
 
     struct maze_solver_config actual{get_maze_solver_config()};
 
-    CHECK(expected.maze_size == actual.maze_size);
-    CHECK(expected.total_timeout_sec == actual.total_timeout_sec);
-    CHECK(expected.move_forward_time_sec == actual.move_forward_time_sec);
-    CHECK(expected.rotate_90_deg_time_sec == actual.rotate_90_deg_time_sec);
-    CHECK(expected.rotate_180_deg_time_sec == actual.rotate_180_deg_time_sec);
+    LONGS_EQUAL(expected.maze_size, actual.maze_size);
+    LONGS_EQUAL(expected.total_timeout_sec, actual.total_timeout_sec);
+    LONGS_EQUAL(expected.move_forward_time_sec, actual.move_forward_time_sec);
+    LONGS_EQUAL(expected.rotate_90_deg_time_sec, actual.rotate_90_deg_time_sec);
+    LONGS_EQUAL(expected.rotate_180_deg_time_sec, actual.rotate_180_deg_time_sec);
 }
 
 TEST(MazeSolverCommonTests, ResetMazeSolverStateResetsMouseAndGoalFound)
@@ -240,9 +234,9 @@ TEST(MazeSolverCommonTests, ResetMazeSolverStateResetsMouseAndGoalFound)
 
     struct mouse mouse{get_mouse()};
 
-    CHECK(mouse.coordinates.x == 0u);
-    CHECK(mouse.coordinates.y == 0u);
-    CHECK(mouse.direction == DIRECTION_NORTH);
+    LONGS_EQUAL(0u, mouse.coordinates.x);
+    LONGS_EQUAL(0u, mouse.coordinates.y);
+    LONGS_EQUAL(DIRECTION_NORTH, mouse.direction);
 
     CHECK_FALSE(get_goal_found());
 }
@@ -435,7 +429,7 @@ TEST(MazeSolverCommonTests, UpdateCurrentCellWallsFacingEastUpdatesMap)
 
     mock().expectOneCall("rotate_clockwise_90_deg");
     mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
-        .andReturnValue(1u);
+            .andReturnValue(1u);
     mock().expectOneCall("is_left_wall_present").andReturnValue(false);
     mock().expectOneCall("is_front_wall_present").andReturnValue(true);
     mock().expectOneCall("is_right_wall_present").andReturnValue(false);
@@ -458,7 +452,7 @@ TEST(MazeSolverCommonTests, UpdateCurrentCellWallsFacingSouthUpdatesMap)
 
     mock().expectOneCall("rotate_180_deg");
     mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
-        .andReturnValue(1u);
+            .andReturnValue(1u);
     mock().expectOneCall("is_left_wall_present").andReturnValue(true);
     mock().expectOneCall("is_front_wall_present").andReturnValue(true);
     mock().expectOneCall("is_right_wall_present").andReturnValue(true);
@@ -481,7 +475,7 @@ TEST(MazeSolverCommonTests, UpdateCurrentCellWallsFacingWestUpdatesMap)
 
     mock().expectOneCall("rotate_counter_clockwise_90_deg");
     mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
-        .andReturnValue(1u);
+            .andReturnValue(1u);
     mock().expectOneCall("is_left_wall_present").andReturnValue(false);
     mock().expectOneCall("is_front_wall_present").andReturnValue(true);
     mock().expectOneCall("is_right_wall_present").andReturnValue(true);
@@ -513,7 +507,8 @@ TEST(MazeSolverCommonTests, KnownWallsAreNotOverwritten)
 
     mock().expectOneCall("is_left_wall_present").andReturnValue(true);
     mock().expectOneCall("is_front_wall_present").andReturnValue(false);
-    mock().expectOneCall("is_right_wall_present").andReturnValue(false);  /* attempt to clear east wall */
+    mock().expectOneCall("is_right_wall_present")
+            .andReturnValue(false); /* attempt to clear east wall */
     update_current_cell_walls();
 
     CHECK(is_wall_known_at_coordinate({0u, 0u}, DIRECTION_EAST));
@@ -528,8 +523,7 @@ TEST(MazeSolverCommonTests, IsSolverTimeoutReturnsFalseBeforeTimeout)
 
     set_maze_solver_config(cfg);
 
-    mock().expectOneCall("get_elapsed_global_time_sec")
-          .andReturnValue(299u);
+    mock().expectOneCall("get_elapsed_global_time_sec").andReturnValue(299u);
 
     CHECK_FALSE(is_solver_timeout());
 }
@@ -542,8 +536,7 @@ TEST(MazeSolverCommonTests, IsSolverTimeoutReturnsTrueAtTimeout)
 
     set_maze_solver_config(cfg);
 
-    mock().expectOneCall("get_elapsed_global_time_sec")
-          .andReturnValue(300u);
+    mock().expectOneCall("get_elapsed_global_time_sec").andReturnValue(300u);
 
     CHECK(is_solver_timeout());
 }
@@ -556,8 +549,7 @@ TEST(MazeSolverCommonTests, GetSolverRemainingTimeSecReturnsRemainingTime)
 
     set_maze_solver_config(cfg);
 
-    mock().expectOneCall("get_elapsed_global_time_sec")
-          .andReturnValue(123u);
+    mock().expectOneCall("get_elapsed_global_time_sec").andReturnValue(123u);
 
     CHECK(get_solver_remaining_time_sec() == 177u);
 }
@@ -570,8 +562,7 @@ TEST(MazeSolverCommonTests, GetSolverRemainingTimeSecReturnsZeroAfterTimeout)
 
     set_maze_solver_config(cfg);
 
-    mock().expectOneCall("get_elapsed_global_time_sec")
-          .andReturnValue(400u);
+    mock().expectOneCall("get_elapsed_global_time_sec").andReturnValue(400u);
 
     CHECK(get_solver_remaining_time_sec() == 0u);
 }
@@ -600,7 +591,7 @@ TEST(MazeSolverCommonTests, EstimateReturnToStartTimeSecReturnsPathTime)
     /* Open east wall at (0,1) */
     mock().expectOneCall("rotate_clockwise_90_deg");
     mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
-        .andReturnValue(1u);
+            .andReturnValue(1u);
     mock().expectOneCall("is_left_wall_present").andReturnValue(true);
     mock().expectOneCall("is_front_wall_present").andReturnValue(true);
     mock().expectOneCall("is_right_wall_present").andReturnValue(true);
@@ -614,7 +605,7 @@ TEST(MazeSolverCommonTests, EstimateReturnToStartTimeIsZeroWhenAlreadyAtStart)
 {
     initialize_4_by_4_maze();
 
-    CHECK(estimate_return_to_start_time_sec() == 0u);
+    LONGS_EQUAL(0u, estimate_return_to_start_time_sec());
 }
 
 TEST(MazeSolverCommonTests, EstimateBestPathToGoalTimeSecReturnsShortestKnownPathTime)
@@ -639,7 +630,7 @@ TEST(MazeSolverCommonTests, EstimateBestPathToGoalTimeSecReturnsShortestKnownPat
     execute_move(MOVE_FORWARD);
 
     /* shortest from start to a goal cell is move forward, turn right, move forward */
-    CHECK(estimate_best_path_to_goal_time_sec() == 4u);
+    LONGS_EQUAL(4u, estimate_best_path_to_goal_time_sec());
 }
 
 TEST(MazeSolverCommonTests, EstimateBestPathToGoalTimeSecReturnsMaxWhenNoPathExists)
@@ -661,9 +652,9 @@ TEST(MazeSolverCommonTests, ExecuteMoveForwardMovesMouseNorthOneCell)
 
     struct mouse mouse{get_mouse()};
 
-    CHECK(mouse.coordinates.x == 0u);
-    CHECK(mouse.coordinates.y == 1u);
-    CHECK(mouse.direction == DIRECTION_NORTH);
+    LONGS_EQUAL(0u, mouse.coordinates.x);
+    LONGS_EQUAL(1u, mouse.coordinates.y);
+    LONGS_EQUAL(DIRECTION_NORTH, mouse.direction);
 }
 
 TEST(MazeSolverCommonTests, ExecuteMoveLeftRotatesAndMovesMouse)
@@ -672,7 +663,7 @@ TEST(MazeSolverCommonTests, ExecuteMoveLeftRotatesAndMovesMouse)
 
     mock().expectOneCall("rotate_counter_clockwise_90_deg");
     mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
-        .andReturnValue(1u);
+            .andReturnValue(1u);
     mock().expectOneCall("is_left_wall_present").andReturnValue(false);
     mock().expectOneCall("is_front_wall_present").andReturnValue(false);
     mock().expectOneCall("is_right_wall_present").andReturnValue(false);
@@ -681,9 +672,9 @@ TEST(MazeSolverCommonTests, ExecuteMoveLeftRotatesAndMovesMouse)
 
     struct mouse mouse{get_mouse()};
 
-    CHECK(mouse.coordinates.x == (uint8_t)-1); /* expected underflow */
-    CHECK(mouse.coordinates.y == 0u);
-    CHECK(mouse.direction == DIRECTION_WEST);
+    LONGS_EQUAL((uint8_t)(-1), mouse.coordinates.x); /* expected underflow */
+    LONGS_EQUAL(0u, mouse.coordinates.y);
+    LONGS_EQUAL(DIRECTION_WEST, mouse.direction);
 }
 
 TEST(MazeSolverCommonTests, ExecuteMoveRightRotatesAndMovesMouse)
@@ -692,7 +683,7 @@ TEST(MazeSolverCommonTests, ExecuteMoveRightRotatesAndMovesMouse)
 
     mock().expectOneCall("rotate_clockwise_90_deg");
     mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
-        .andReturnValue(1u);
+            .andReturnValue(1u);
     mock().expectOneCall("is_left_wall_present").andReturnValue(false);
     mock().expectOneCall("is_front_wall_present").andReturnValue(false);
     mock().expectOneCall("is_right_wall_present").andReturnValue(false);
@@ -701,9 +692,9 @@ TEST(MazeSolverCommonTests, ExecuteMoveRightRotatesAndMovesMouse)
 
     struct mouse mouse{get_mouse()};
 
-    CHECK(mouse.coordinates.x == 1u);
-    CHECK(mouse.coordinates.y == 0u);
-    CHECK(mouse.direction == DIRECTION_EAST);
+    LONGS_EQUAL(1u, mouse.coordinates.x);
+    LONGS_EQUAL(0u, mouse.coordinates.y);
+    LONGS_EQUAL(DIRECTION_EAST, mouse.direction);
 }
 
 TEST(MazeSolverCommonTests, ExecuteMoveTurnAroundRotatesAndMovesMouse)
@@ -712,7 +703,7 @@ TEST(MazeSolverCommonTests, ExecuteMoveTurnAroundRotatesAndMovesMouse)
 
     mock().expectOneCall("rotate_180_deg");
     mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
-        .andReturnValue(1u);
+            .andReturnValue(1u);
     mock().expectOneCall("is_left_wall_present").andReturnValue(false);
     mock().expectOneCall("is_front_wall_present").andReturnValue(false);
     mock().expectOneCall("is_right_wall_present").andReturnValue(false);
@@ -721,9 +712,9 @@ TEST(MazeSolverCommonTests, ExecuteMoveTurnAroundRotatesAndMovesMouse)
 
     struct mouse mouse{get_mouse()};
 
-    CHECK(mouse.coordinates.x == 0u);
-    CHECK(mouse.coordinates.y == (uint8_t)-1); /* expected underflow */
-    CHECK(mouse.direction == DIRECTION_SOUTH);
+    LONGS_EQUAL(0u, mouse.coordinates.x);
+    LONGS_EQUAL((uint8_t)(-1), mouse.coordinates.y); /* expected underflow */
+    LONGS_EQUAL(DIRECTION_SOUTH, mouse.direction);
 }
 
 TEST(MazeSolverCommonTests, ReturnToStartFollowsShortestPathBackToOrigin)
@@ -740,7 +731,7 @@ TEST(MazeSolverCommonTests, ReturnToStartFollowsShortestPathBackToOrigin)
     /* open east from (0,1) */
     mock().expectOneCall("rotate_clockwise_90_deg");
     mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
-        .andReturnValue(1u);
+            .andReturnValue(1u);
     mock().expectOneCall("is_left_wall_present").andReturnValue(true);
     mock().expectOneCall("is_front_wall_present").andReturnValue(true);
     mock().expectOneCall("is_right_wall_present").andReturnValue(false);
@@ -752,12 +743,10 @@ TEST(MazeSolverCommonTests, ReturnToStartFollowsShortestPathBackToOrigin)
      * (0,1,W) -> (0,0,S)
      */
     mock().expectOneCall("rotate_180_deg");
-    mock().expectOneCall("move_forward")
-        .andReturnValue(1u);
+    mock().expectOneCall("move_forward").andReturnValue(1u);
 
     mock().expectOneCall("rotate_counter_clockwise_90_deg");
-    mock().expectOneCall("move_forward")
-        .andReturnValue(1u);
+    mock().expectOneCall("move_forward").andReturnValue(1u);
 
     return_to_start();
 
@@ -779,7 +768,7 @@ TEST(MazeSolverCommonTests, CalculateFastestPathStoresShortestPathToGoal)
 
     mock().expectOneCall("rotate_clockwise_90_deg");
     mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
-        .andReturnValue(1u);
+            .andReturnValue(1u);
     mock().expectOneCall("is_left_wall_present").andReturnValue(true);
     mock().expectOneCall("is_front_wall_present").andReturnValue(true);
     mock().expectOneCall("is_right_wall_present").andReturnValue(true);
@@ -806,7 +795,7 @@ TEST(MazeSolverCommonTests, CalculateFastestPathStoresEmptyPathWhenGoalNotReacha
 
     struct maze_solver_path path{get_fastest_path()};
 
-    CHECK(path.length == 0u);
+    LONGS_EQUAL(0u, path.length);
 }
 
 TEST(MazeSolverCommonTests, ExecuteSpeedRunPathFollowsStoredPath)
@@ -819,7 +808,7 @@ TEST(MazeSolverCommonTests, ExecuteSpeedRunPathFollowsStoredPath)
 
     mock().expectOneCall("rotate_clockwise_90_deg");
     mock().expectOneCall("move_forward_until_turn_or_intersection_and_return_steps")
-        .andReturnValue(1u);
+            .andReturnValue(1u);
     mock().ignoreOtherCalls();
     execute_move(MOVE_RIGHT);
 
@@ -844,8 +833,7 @@ TEST(MazeSolverCommonTests, ExecuteSpeedRunPathFollowsStoredPath)
 
     mock().expectOneCall("move_forward");
     mock().expectOneCall("rotate_clockwise_90_deg");
-    mock().expectOneCall("move_forward")
-        .andReturnValue(1u);
+    mock().expectOneCall("move_forward").andReturnValue(1u);
     mock().ignoreOtherCalls();
 
     execute_speed_run_path();
