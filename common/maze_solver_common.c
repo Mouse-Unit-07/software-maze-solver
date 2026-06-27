@@ -647,8 +647,8 @@ static bool is_cell_fully_known(struct coordinates coord)
 {
     struct map_cell *cell = &maze[coord.y][coord.x];
 
-    uint8_t known_mask =
-        CELL_NORTH_WALL_KNOWN | CELL_EAST_WALL_KNOWN | CELL_SOUTH_WALL_KNOWN | CELL_WEST_WALL_KNOWN;
+    uint8_t known_mask = CELL_NORTH_WALL_KNOWN | CELL_EAST_WALL_KNOWN | CELL_SOUTH_WALL_KNOWN
+                         | CELL_WEST_WALL_KNOWN;
 
     return (cell->flags & known_mask) == known_mask;
 }
